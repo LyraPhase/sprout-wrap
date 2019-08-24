@@ -259,7 +259,6 @@ node_attributes:
 #      - ccmenu
 #      - cord
       - firefox
-      - fitbit-connect
 #      - freefilesync
 #      - gitx-rowanj
       - garmin-express
@@ -274,7 +273,6 @@ node_attributes:
       - logitech-options
       - skype
       - steam
-      - tomtom-mysports-connect
       - textmate
       - vagrant
       - virtualbox
