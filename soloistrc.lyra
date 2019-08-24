@@ -260,7 +260,6 @@ node_attributes:
 #      - cord
       - firefox
       - fitbit-connect
-      - flux
 #      - freefilesync
 #      - gitx-rowanj
       - garmin-express
