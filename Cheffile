@@ -37,16 +37,16 @@ cookbook 'sprout-postgresql',
 cookbook 'sprout-ssh',
   :github => 'pivotal-sprout/sprout-ssh'
 
+cookbook 'plist',
+ :github => 'carsomyr/chef-plist',
+ :ref => 'master',
+ :path => 'vendor/cookbooks/plist'
+
 cookbook 'lyraphase_workstation', '~> 2.0',
  :github => 'trinitronx/lyraphase_workstation'
 # :ref => 'develop'
 # :git => '/Users/jcuzella/src/pub/cookbooks/lyraphase_workstation',
 # :ref => 'develop'
-
-cookbook 'plist',
- :github => 'carsomyr/chef-plist',
- :ref => 'master',
- :path => 'vendor/cookbooks/plist'
 
 ## Broken dependency on sprout-homebrew
 ## Deprecated by sprout-jetbrains-editors::rubymine 
