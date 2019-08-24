@@ -262,12 +262,10 @@ node_attributes:
 #      - freefilesync
 #      - gitx-rowanj
       - garmin-express
-      - github-desktop
       - google-chrome
       - kid3
       - chefdk
       - musicbrainz-picard
-      - near-lock
       - netspot
 #      - google-hangouts
       - logitech-options
@@ -292,7 +290,6 @@ node_attributes:
       - yubico-yubikey-piv-manager
       - yubico-yubikey-personalization-gui
       - java
-      - processing
 #      - cyberduck
       - dropbox
 #      - hex-fiend
