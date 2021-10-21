@@ -277,6 +277,7 @@ node_attributes:
       - google-chrome
       - kid3
       - chef-workstation
+      - mixed-in-key
       - musicbrainz-picard
       - netspot
 #      - google-hangouts
@@ -287,6 +288,7 @@ node_attributes:
       - textmate
       - surge-synthesizer
       - sysex-librarian
+      - waves-central
       - vcv-rack
       - vagrant
       - vagrant-vmware-utility
