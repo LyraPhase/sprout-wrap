@@ -68,6 +68,20 @@ Misc
   - Cons:
     - Not as easy to push changes back upstream (if it becomes active again)
     - Not as much community support (if it becomes active again)
+  - Alternative "sprout"-themed name brainstorming:
+    - sprig
+    - shoot (too generic, has alternate meaning)
+    - twig
+    - seed
+    - seedling
+    - sapling
+    - plant
+    - leaf
+    - cotyledon
+  - "sprout-wrap" Alternatives:
+    - exocarp
+    - seed-coat
+    - endocarp
 - Update GitHub `known_hosts` keys to use [their newer public key algorithms][7]:
 - ECDSA:
 - Ed25519:
