@@ -4,6 +4,12 @@ recipes:
 - sprout-base
 - sprout-base::bash_it
 
+# Need user git config for 1st time bootstrap
+### TODO: Fix known_hosts_github to use ssh-keyscan, or attributes
+### TODO: Install github known_hosts for root also! (bash-it fails b/c git ls-remote is run via root)
+- sprout-ssh::known_hosts_github
+- sprout-ssh::dot_ssh_config_github
+- sprout-git::global_config
 - lyraphase_workstation::homebrew_sudoers # Workaround for chef-cookbooks/homebrew#105
 - homebrew
 - homebrew::install_taps
@@ -104,7 +110,6 @@ node_attributes:
         - osx
         - rvm
         - ssh
-        - vagrant
       aliases:
         - ag
         - bundler
@@ -121,6 +126,7 @@ node_attributes:
         - rake
         - ssh
         - tmux
+        - vagrant
     custom_plugins:
       sprout-base:
         - bash_it/custom/disable_ctrl-s_output_control.bash
@@ -185,10 +191,8 @@ node_attributes:
         merge.tool: meld
   homebrew:
     taps:
-      - caskroom/versions
       - homebrew/versions
       - homebrew/homebrew-core
-      - trinitronx/truecrypt
       - jlhonora/lsusb
       - caskroom/drivers
       - chef/homebrew-chef
@@ -208,7 +212,7 @@ node_attributes:
       - p7zip
       - pstree
       - htop-osx
-#      - iperf3
+      - iperf3
 #      - qt
       - ssh-copy-id
       - tmux
@@ -229,9 +233,14 @@ node_attributes:
       - wemux
       - s3cmd
       - ack
+      - cfv
+      - fio
       - name: ffmpeg
         options: --with-fdk-aac --with-fontconfig --with-freetype --with-libass --with-libbluray --with-libsoxr --with-libssh --with-libvorbis --with-opencore-amr --with-openh264 --with-openjpeg --with-openssl --with-sdl2 --with-snappy --with-tools --with-webp --with-x265 --with-xz
       - mediainfo
+      - bpm-tools
+      - sox
+      - guetzli
       - youtube-dl
       - sleepwatcher
       - wakeonlan
@@ -248,31 +257,44 @@ node_attributes:
       - coreutils
       - lsusb
     casks:
-# Resin.io mmc card img writer tool
-      - etcher
+      - asana
+# Balena.io (formerly Resin.io) mmc card img writer tool
+      - balenaetcher
 # Let the lyraphase_workstation::airfoil recipe do this instead
 #      - airfoil
+#      - loopback ## TODO
       - keyfinder
+      - blackhole
+      - elektron-overbridge
       - soundflowerbed
       - ocenaudio
+      - streamlabs-obs
       - obs
+      - jamkazam
 #      - ccmenu
 #      - cord
       - firefox
 #      - freefilesync
 #      - gitx-rowanj
       - garmin-express
+      - github
       - google-chrome
       - kid3
-      - chefdk
+      - chef-workstation
       - musicbrainz-picard
       - netspot
+      - openvpn-connect
 #      - google-hangouts
+      - elektron-overbridge
       - logitech-options
       - skype
       - steam
       - textmate
+      - surge-synthesizer
+      - sysex-librarian
+      - vcv-rack
       - vagrant
+      - vagrant-vmware-utility
       - virtualbox
       - virtualbox-extension-pack
       - vmware-fusion
@@ -281,7 +303,6 @@ node_attributes:
       - xscope
       - keybase
       - gpg-suite
-      - truecrypt
       - veracrypt
       - osxfuse
       - lastpass
@@ -292,6 +313,7 @@ node_attributes:
       - java
 #      - cyberduck
       - dropbox
+      - zoom
 #      - hex-fiend
 #      - beyond-compare
 #      - mumble
@@ -319,8 +341,8 @@ node_attributes:
 #        registration_key:
 #    airfoil:
 #      license:
-#        code: 
-#        name: 
+#        code:
+#        name:
   lyraphase_workstation:
     ableton_live:
       managed_versions: all
@@ -336,3 +358,4 @@ node_attributes:
     nfs_mounts:
       - "#/../Volumes/saturn    -fstype=nfs,noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export"
       - "/../Volumes/terabyte    -fstype=nfs,vers=3,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"
+      - "/System/Volumes/Data/../Data/Volumes/terabyte    -fstype=nfs,vers=3,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"

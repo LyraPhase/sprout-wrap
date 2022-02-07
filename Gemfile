@@ -2,11 +2,21 @@ source 'https://rubygems.org'
 
 gem 'soloist', require: false
 
+# >= 1.15.2 supports macOS 12.0 / Xcode 13.2
+#  ffi clang M1 compile
+gem 'ffi', '>= 1.15.2', require: false
+
 gem 'plist', require: false
 
 gem 'librarian-chef', require: false
 
+# lyraphase-chef requires nokogiri gem
+gem 'nokogiri', require: false
+
 group :development do
+  gem 'pry', require: false
+  gem 'pry-coolline', require: false
+  gem 'pry-byebug', require: false
   gem 'bundler', require: false
   gem 'guard', require: false
   gem 'guard-rspec', require: false

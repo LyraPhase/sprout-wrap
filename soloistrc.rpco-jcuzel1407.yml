@@ -10,19 +10,12 @@ recipes:
   - homebrew
   - homebrew::install_taps
   - homebrew::install_casks
-  ## Must be before homebrew::install_formulas to avoid symlink conflict error
-  - lyraphase_workstation::gpg21
   - homebrew::install_formulas
-  ## Functionality not yet in homebrew cookbook
-  ## - sprout-homebrew::launchctl
+  - sprout-homebrew::launchctl  ## Functionality not yet in homebrew cookbook
 
   # settings
   - sprout-osx-settings
   - sprout-osx-settings::dock_preferences
-  - sprout-osx-settings::inputrc
-  - sprout-osx-settings::defaults_fast_key_repeat_rate
-  - sprout-osx-settings::locate
-  - sprout-osx-settings::machine_name
   - sprout-terminal
   - sprout-ssh::known_hosts_github
 
@@ -44,13 +37,12 @@ recipes:
   # - sprout-osx-apps::flycut
   - sprout-osx-apps::shiftit
   # - sprout-osx-apps::keycastr
-  ## TODO:
-  # Follow up on https://github.com/pivotal-sprout/sprout-osx-settings/issues/24
+  ## TODO: Follow up on https://github.com/pivotal-sprout/sprout-osx-settings/issues/24
   # - sprout-osx-settings::screen_sharing_app
   # - sprout-osx-apps::menumeters
 
   # apps (editors)
-  # - sprout-osx-apps::textmate_preferences
+  - sprout-osx-apps::textmate_preferences
   # - sprout-osx-apps::macvim
   # - sprout-rubymine
 
@@ -66,23 +58,17 @@ recipes:
 
   ### Lyraphase Workstation & Custom
   - lyraphase_workstation::airfoil
-  - lyraphase_workstation::loopback_alias_ip
-  - lyraphase_workstation::ssh_tunnel_port_override
-  # - lyraphase_workstation::bash4
-  # - lyraphase_workstation::bash_it_custom_plugins
-  # - lyraphase_workstation::iterm2
-  # - lyraphase_workstation::iterm2_shell_integration
+  - lyraphase_workstation::traktor
+  - lyraphase_workstation::traktor_audio_2
 
 node_attributes:
   bash_it:
-    repository: 'https://github.com/Bash-it/bash-it.git'
     enabled_plugins:
       plugins:
         - base
         - osx
         - rvm
         - ssh
-        - vagrant
       aliases:
         - ag
         - bundler
@@ -99,6 +85,7 @@ node_attributes:
         - rake
         - ssh
         - tmux
+        - vagrant
     custom_plugins:
       sprout-base:
         - bash_it/custom/disable_ctrl-s_output_control.bash
@@ -133,65 +120,28 @@ node_attributes:
           name: iterm_open_with
           workspace_path: ~/src/pub
           post_clone_commands:
-            - "[ ! -d ~jcuzella/bin ] && mkdir ~jcuzella/bin || true"
-            - >
-              ln -sf ~jcuzella/src/pub/iterm_open_with/iterm_open_with ~jcuzella/bin/iterm_open_with
-      aliases:
-        - ci "commit -S"
-        # - >
-        #  oldest-ancestor '!bash -c "diff -u <(git rev-list --first-parent \"${1:-master}\") <(git rev-list --first-parent \"${2:-HEAD}\") | sed -ne \"s/^ //p\" | head -1"'
-        - >
-          oldest-ancestor '!bash -c "diff -u <(git rev-list --first-parent \"${1:-master}\") <(git rev-list --first-parent \"${2:-HEAD}\") | sed -ne '\''s/^ //p'\'' | head -1"'
-        - unstage-all "reset HEAD --"
-      global_config:
-        core.pager: '"less -FXRS -x2"'
-        apply.whitespace: nowarn
-        color.branch: auto
-        color.diff: auto
-        color.interactive: auto
-        color.status: auto
-        color.ui: auto
-        branch.autosetupmerge: 'true'
-        rebase.autosquash: 'true'
-        # Custom git config settings
-        core.excludesfile: /Users/jcuzella/.gitignore_global
-        user.signingkey: 09F02FCD
-        push.default: simple
-        bash-it.hide-status: '1'
-        url."git@github.com:".insteadOf: https://github.com/
-        commit.gpgsign: 'true'
-        gpg.program: gpg2
-        merge.tool: meld
+            - "[ ! -d ~/bin ] && mkdir ~/bin"
+            - ln -sf ~/src/pub/iterm_open_with/iterm_open_with ~/bin/iterm_open_with
   homebrew:
     taps:
-      - chef/chef
       - caskroom/versions
+      - homebrew/completions
+      - homebrew/gui
       - trinitronx/truecrypt
-      - insomniacslk/dublin-traceroute
       - jlhonora/lsusb
     formulas:
       - bash-completion
       - ctags-exuberant
       - ag
       - grc
+      - boot2docker
       - chromedriver
-      - docker
-      - docker-compose
-      - docker-machine
-      - docker-machine-nfs
-      - terraform
-      - kubernetes-cli
-      - kops
       - imagemagick
       - openssl
       - xz
-      - go
       - node
-      - maven
-      - thrift
       - p7zip
       - pstree
-      - unrar
       - htop-osx
       - iperf3
       - qt
@@ -210,20 +160,16 @@ node_attributes:
       - parallel
       - macvim
       - wemux
-      - awscli
       - s3cmd
       - ack
       - mediainfo
+      - homebrew/gui/meld
       - keybase
       - sleepwatcher
-      - wakeonlan
       - mtr
-      - proxytunnel
       - jq
-      - xmlstarlet
       - expect
       - rename
-      - lastpass-cli
       - pwgen
       - terminal-notifier
       - yubikey-personalization
@@ -231,59 +177,52 @@ node_attributes:
       - dfu-util
       - coreutils
       - lsusb
-      # OSX Fuse FS drivers
-      - ext2fuse
-      - ext4fuse
     casks:
       - ccmenu
       - cord
       - firefox
       # - flux
-      # - freefilesync ### DOWNLOAD FAILED!  TODO
-      # - gitx-rowanj ### CASK DOES NOT EXIST TODO
-      - github-desktop
+      - freefilesync
+      - gitx-rowanj
+      - github
       - google-chrome
-      - google-drive
       - chefdk
       # - near-lock
-      - netspot
       - google-hangouts
       - skype
       - textmate
       - vagrant
       - virtualbox
-      - virtualbox-extension-pack
       - vmware-fusion
-      - minikube
       - wireshark
       - xquartz
       - xscope
-      - gpgtools
-      - truecrypt
-      - veracrypt
-      - osxfuse
+      - gpg-suite
       - lastpass
       - yubico-authenticator
-      - yubico-yubikey-manager
-      - yubico-yubikey-piv-manager
-      - yubico-yubikey-personalization-gui
+      - yubikey-neo-manager
       - java
-      - java6
       - sqlworkbenchj
       - mysqlworkbench
-      - intellij-idea-ce
       - cyberduck
       - dropbox
       - hex-fiend
       - beyond-compare
       # - mumble
       # - teamspeak
+      - sublime-text3
       ## Commented out until they update to Sublime Text 3
-      - sublime-text
-      - meld
-      - etcher
+      # - sublime-text
 
   workspace_directory: src
+  # vagrant:
+  #   dmg:
+  #     source: http://files.vagrantup.com/packages/a40522f5fabccb9ddabad03d836e120ff5d14093/Vagrant-1.3.5.dmg
+  #     checksum: a9486c60f0dd18c52e2c202b4a91a4024469cec6726abdf70438bcc1e79afbb4
+  virtualbox:
+    dmg:
+      source: http://download.virtualbox.org/virtualbox/4.3.2/VirtualBox-4.3.2-90405-OSX.dmg
+      checksum: de6d2c433b259162ba68156531954cf4c7fd192e8b47e72ea486988e4fe5939e
   vim_alias_vi_to_minimal_vim: false
   versions:
     rvm: 1.26.11
@@ -291,8 +230,7 @@ node_attributes:
     default_ruby: ruby-2.2.2
     rubies:
       ruby-1.9.3-p392:
-        :command_line_options: <
-          --verify-downloads 1  --enable-shared  --with-openssl-dir=$rvm_path/usr --with-readline-dir=$rvm_path/usr
+        :command_line_options: --verify-downloads 1  --enable-shared  --with-openssl-dir=$rvm_path/usr --with-readline-dir=$rvm_path/usr
     multithread_build: true
 # TODO: Dynamically get AWS user & key?
 #  s3cfg:
