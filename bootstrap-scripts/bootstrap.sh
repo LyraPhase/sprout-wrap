@@ -17,8 +17,8 @@ function detect_platform_version() {
   # Matching the tab-space with sed is error-prone
   platform_version=$(sw_vers | awk '/^ProductVersion:/ { print $2 }')
 
-  major_version=$(echo $platform_version | cut -d. -f1,2)
-  
+  major_version=$(echo "$platform_version" | cut -d. -f1,2)
+
   # x86_64 Apple hardware often runs 32-bit kernels (see OHAI-63)
   # macOS Monterey + Apple M1 Silicon (arm64) gives empty string for this x86_64 check
   x86_64=$(sysctl -n hw.optional.x86_64)
@@ -81,9 +81,9 @@ function turn_trace_off() {
 
 function check_sprout_locked_ruby_versions() {
   # Check locked versions
-  sprout_ruby_version=$(cat "${REPO_BASE}/.ruby-version" | tr -d '\n')
-  sprout_ruby_gemset=$(cat "${REPO_BASE}/.ruby-gemset" | tr -d '\n')
-  sprout_rubygems_ver=$(cat "${REPO_BASE}/.rubygems-version" | tr -d '\n') ## Passed to gem update --system
+  sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
+  sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
+  sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
   sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | tr -d '[:blank:]')
 }
 
@@ -95,8 +95,24 @@ function rvm_set_compile_opts() {
     export DLDFLAGS="-L/opt/homebrew/opt/libffi/lib"
     export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
     export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
+    bundle config build.ffi --enable-system-libffi
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
+    bundle config build.nokogiri --platform=ruby -- --use-system-libraries
   fi
   turn_trace_off
+}
+
+function brew_install_rvm_libs() {
+  if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
+    grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
+    grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
+    grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
+    grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+  fi
 }
 
 function rvm_install_ruby_and_gemset() {
@@ -104,35 +120,37 @@ function rvm_install_ruby_and_gemset() {
 
   rvm_set_compile_opts
 
-  rvm install ruby-${sprout_ruby_version}
-  rvm use ruby-${sprout_ruby_version}
-  rvm gemset create $sprout_ruby_gemset
-  rvm use ruby-${sprout_ruby_version}@${sprout_ruby_gemset}
+  rvm install "ruby-${sprout_ruby_version}"
+  rvm use "ruby-${sprout_ruby_version}"
+  rvm gemset create "$sprout_ruby_gemset"
+  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
 }
 
+# shellcheck disable=SC1010
 function rvm_install_bundler() {
   check_sprout_locked_ruby_versions
 
   # Install bundler + rubygems in RVM path
-  echo rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}
-  rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}
+  echo "rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}"
+  rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
 
   # Install same version of bundler as Gemfile.lock
-  echo rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}
-  rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}
+  echo "rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}"
+  rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
 }
 
+# shellcheck disable=SC1010
 function rvm_debug_gems() {
   if [ "$trace_was_on" -eq 1 ]; then
     echo "======= DEBUG ============"
     type rvm | head -1
-    which ruby
-    which bundler
+    command -v ruby
+    command -v bundler
     rvm info
     echo "GEMS IN SHELL ENV:"
     gem list
     echo "GEMS IN ${sprout_ruby_version}@${sprout_ruby_gemset}:"
-    rvm ${sprout_ruby_version}@${sprout_ruby_gemset} do gem list
+    rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
     echo "======= DEBUG ============"
   fi
 }
@@ -155,7 +173,7 @@ SOLOIST_DIR=${SOLOIST_DIR:-"${HOME}/src/pub/soloist"}
 SPROUT_WRAP_URL='https://github.com/LyraPhase/sprout-wrap.git'
 SPROUT_WRAP_BRANCH=${SPROUT_WRAP_BRANCH:-'master'}
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
-USER_AGENT="Chef Bootstrap/$(git rev-parse HEAD) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr 'A-Z' 'a-z')$(uname -r); +https://lyraphase.com)"
+USER_AGENT="Chef Bootstrap/$(git rev-parse HEAD) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
 
 if [[ "${BASH_SOURCE[0]}" != '' ]]; then
   # Running from checked out script
@@ -171,7 +189,8 @@ detect_platform_version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
   12.0*|12.1*|12.2*)
-          XCODE_DMG='Xcode_13.2.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;;
+          XCODE_DMG='Xcode_13.2.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
+          BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.15*) XCODE_DMG='Xcode_12.4.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.14*) XCODE_DMG='Xcode_11_GM_Seed.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
@@ -187,7 +206,7 @@ errorout() {
   echo -e "\x1b[31;1mERROR:\x1b[0m ${1}"; exit 1
 }
 
-pushd `pwd`
+pushd "$(pwd)"
 
 # TODO: Figure out if Xcodes CLI tool will work?
 #       https://github.com/RobotsAndPencils/Xcodes
@@ -201,18 +220,18 @@ if [ ! -d "/Applications/Xcode.app" ]; then
       curl --fail --user-agent "$USER_AGENT" -L -O "http://lyraphase.com/doc/installers/mac/${XCODE_DMG}" || curl --fail -L -O "http://adcdownload.apple.com/Developer_Tools/${XCODE_DMG%%.dmg}/${XCODE_DMG}"
     fi
   fi
-    
+
   # Why does Apple have to make everything more difficult?
   if [[ "$XCODE_DMG" =~ ^.*\.xip$ ]]; then
     pkgutil --check-signature $XCODE_DMG
     TMP_DIR=$(mktemp -d /tmp/xcode-installer.XXXXXXXXXX)
 
-    if [[ -x "$(which xip)" ]]; then
+    if [[ -x "$(command -v xip)" ]]; then
       xip -x "${REPO_BASE}/${XCODE_DMG}"
       sudo mv ./Xcode.app /Applications/
     else
-      xar -C ${TMP_DIR}/ -xf $XCODE_DMG
-      pushd $TMP_DIR
+      xar -C "${TMP_DIR}/" -xf "$XCODE_DMG"
+      pushd "$TMP_DIR"
       curl -O https://gist.githubusercontent.com/pudquick/ff412bcb29c9c1fa4b8d/raw/24b25538ea8df8d0634a2a6189aa581ccc6a5b4b/parse_pbzx2.py
       python parse_pbzx2.py Content
       xz -d Content.part*.cpio.xz
@@ -220,7 +239,7 @@ if [ ! -d "/Applications/Xcode.app" ]; then
       sudo mv ./Xcode.app /Applications/
       popd
     fi
-    [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR/"
+    [ -d "$TMP_DIR" ] && rm -rf "${TMP_DIR:?}/"
   else
     hdiutil attach "$XCODE_DMG"
     export __CFPREFERENCES_AVOID_DAEMON=1
@@ -276,13 +295,13 @@ fi
 
 # We need to accept the xcodebuild license agreement before building anything works
 # Evil Apple...
-if [ -x "$(which expect)" ]; then
+if [ -x "$(command -v expect)" ]; then
   echo "INFO: GNU expect found! By using this script, you automatically accept the XCode License agreement found here: http://www.apple.com/legal/sla/docs/xcode.pdf"
   # Git.io short URL to: ./bootstrap-scripts/accept-xcodebuild-license.exp
   #curl -Ls 'https://git.io/viaLD' | sudo expect -
   sudo expect "${REPO_BASE}/bootstrap-scripts/accept-xcodebuild-license.exp"
 else
-  echo -e "\x1b[31;1mERROR:\x1b[0m Could not find expect utility (is '$(which expect)' executable?)"
+  echo -e "\x1b[31;1mERROR:\x1b[0m Could not find expect utility (is '$(command -v expect)' executable?)"
   echo -e "\x1b[31;1mWarning:\x1b[0m You have not agreed to the Xcode license.\nBuilds will fail! Agree to the license by opening Xcode.app or running:\n
     xcodebuild -license\n\nOR for system-wide acceptance\n
     sudo xcodebuild -license"
@@ -292,6 +311,7 @@ fi
 
 if [[ "$INSTALL_SDK_HEADERS" == '1' ]]; then
   # Reference: https://github.com/Homebrew/homebrew-core/issues/18533#issuecomment-332501316
+  # shellcheck disable=SC2016
   if ruby_mkmf_output="$(ruby -r mkmf -e 'print $hdrdir + "\n"')" && [ -d "$ruby_mkmf_output" ];
   then
      echo "INFO: Ruby header files successfully found!"
@@ -300,17 +320,16 @@ if [[ "$INSTALL_SDK_HEADERS" == '1' ]]; then
     # Reference: https://donatstudios.com/MojaveMissingHeaderFiles
     sudo rm -rf /Library/Developer/CommandLineTools
     sudo xcode-select --install
+    # shellcheck disable=SC2009
     xcode_clt_pid=$(ps auxww | grep -i 'Install Command Line Developer Tools' | grep -v grep | awk '{ print $2 }')
     # wait for non-child PID of CLT installer dialog UI
-    while ps -p $xcode_clt_pid >/dev/null ; do sleep 1; done
+    while ps -p "$xcode_clt_pid" >/dev/null ; do sleep 1; done
 
     sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg  -target /
   fi
 fi
 
-if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
-  echo "brew 'libffi'" >> Brewfile
-fi
+brew_install_rvm_libs
 
 if [[ "$CI" == 'true' ]]; then
   echo "INFO: CI run detected via \$CI=$CI env var"
@@ -326,17 +345,21 @@ else
   if [ -d sprout-wrap ]; then
     pushd sprout-wrap && git pull
   else
-    git clone $SPROUT_WRAP_URL
+    git clone "$SPROUT_WRAP_URL"
     pushd sprout-wrap
-    git checkout $SPROUT_WRAP_BRANCH
+    git checkout "$SPROUT_WRAP_BRANCH"
   fi
 fi
 
 # Non-Chef Homebrew install
 check_trace_state
 turn_trace_off
-brew --version
-[ -x "$(which brew)" -a "$?" -eq 0 ] || echo | /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
+
+if [ -x "$(command -v brew)" ] && brew --version; then
+  :
+else
+  echo | /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
+fi
 turn_trace_on_if_was_on
 
 if [ "$machine" == "arm64" ]; then
@@ -347,7 +370,7 @@ fi
 
 
 # Install Chef Workstation SDK via Brewfile
-[ -x "$(which brew)" ] && brew bundle install
+[ -x "$(command -v brew)" ] && brew bundle install
 
 if [[ $use_system_ruby == "1" ]]; then
   # We should never get here unless script has been edited by hand
@@ -355,8 +378,9 @@ if [[ $use_system_ruby == "1" ]]; then
   echo "WARN: Using macOS system Ruby is not recommended!" >&2
   echo "WARN: Updating system bundler gem will modify stock macOS system files!" >&2
   if [[ "$override_use_system_ruby_prompt" != '1' ]]; then
+    # shellcheck disable=SC2162
     read -p 'Are you sure you want to continue and use macOS System Ruby? [y/N]: ' -d $'\n' use_system_ruby_answer
-    use_system_ruby_answer="$(echo -n "$use_system_ruby_answer" | tr 'A-Z' 'a-z')"
+    use_system_ruby_answer="$(echo -n "$use_system_ruby_answer" | tr '[:upper:]' '[:lower:]')"
     if [[ "$use_system_ruby_answer" != 'y' ]]; then
       errorout "Abort modifying System Ruby! Exiting..."
     else
@@ -414,7 +438,7 @@ fi
 echo "WARN: Please set up github SSH / HTTPS credentials for Chef Homebrew recipes to work!"
 
 # Bundle install soloist + gems
-if ! bundle check 2>&1 >/dev/null; then
+if ! bundle check >/dev/null 2>&1; then
   bundle config set --local path 'vendor/bundle' ;
   bundle config set --local without 'development' ;
   # --path & --without have deprecation warnings... but for now we'll try them
@@ -430,6 +454,8 @@ if [[ -n "$SOLOISTRC" && "$SOLOISTRC" != 'soloistrc' ]]; then
   fi
 fi
 
+# Auto-accept Chef license for non-interactive automation
+export CHEF_LICENSE=accept
 # Now we provision with chef, et voilá!
 # Node, it's time you grew up to who you want to be
 caffeinate -dimsu bundle exec soloist || errorout "Soloist provisioning failed!"
