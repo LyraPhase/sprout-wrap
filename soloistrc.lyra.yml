@@ -205,6 +205,8 @@ node_attributes:
 #      - chromedriver
       - docker-machine
       - docker-machine-nfs
+      - libvirt
+      - qemu
 #      - imagemagick
       - openssl
       - xz
