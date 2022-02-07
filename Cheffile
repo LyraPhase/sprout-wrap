@@ -42,21 +42,21 @@ cookbook 'plist',
  :ref => 'master',
  :path => 'vendor/cookbooks/plist'
 
-cookbook 'lyraphase_workstation', '~> 3.1',
+cookbook 'lyraphase_workstation', '~> 3.2',
  :github => 'trinitronx/lyraphase_workstation'
 # :ref => 'develop'
 # :git => '/Users/jcuzella/src/pub/cookbooks/lyraphase_workstation',
 # :ref => 'develop'
 
 ## Broken dependency on sprout-homebrew
-## Deprecated by sprout-jetbrains-editors::rubymine 
+## Deprecated by sprout-jetbrains-editors::rubymine
 # cookbook 'sprout-rubymine',
 #   :github => 'trinitronx/sprout-rubymine'
 
-cookbook 'homebrew',
-    '>= 1.13.0'
-#  :github => 'kbruner/homebrew',
-#  :ref => 'issue71'
+cookbook 'homebrew', '~> 5.3.0' #,
+#  :github => 'trinitronx/homebrew',
+#  :github => 'trinitronx/homebrew',
+#  :ref => 'serverspec-inspec-issues'
 
 cookbook 'sprout-jetbrains-editors',
   :github => 'pivotal-sprout/sprout-jetbrains-editors'
