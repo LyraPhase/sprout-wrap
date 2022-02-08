@@ -30,6 +30,35 @@ function detect_platform_version() {
   fi
 }
 
+## Find and return git repo HEAD ref SHA
+function get_git_head_ref() {
+  if which git 2>&1 >/dev/null; then
+    git rev-parse HEAD
+  else
+    HASH="ref: HEAD";
+    while [[ "${HASH:0:4}" == "ref:" ]]; do
+      # Capture the HASH
+      REF="${HASH:5}"
+      if [[ ! -f ".git/$REF" ]]; then
+        echo "Failed to follow reference: '.git/$REF'!  This implies that " >&2
+        echo "this Git repository is broken!" >&2
+        HASH='UNKNOWN'
+      fi
+      HASH="$(cat ".git/$REF")"
+    done
+    echo -n "$HASH"
+  fi
+}
+
+## Find and return current HEAD symbolic branch ref
+function get_git_head_branch() {
+  if which git 2>&1 >/dev/null; then
+    git branch --show-current
+  else
+    awk -F: '{ print $2 }'  .git/HEAD | sed -e 's#[[:space:]]*refs/heads/##'
+  fi
+}
+
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
   # Note: Don't use GNU expect... just a subshell (for some reason expect spawn jacks up readline input)
@@ -52,7 +81,7 @@ trap "exit" INT # Run exit when this script receives Ctrl-C
 ## CI has sudo, but long-running jobs can timeout
 ## unless log output is frequent enough
 prevent_ci_log_timeout() {
-  echo "INFO: CI run detected via \$CI=$CI env var"
+  echo "INFO: CI run detected via \$CI=$CI or \$TEST_KITCHEN=$TEST_KITCHEN env vars"
   echo "INFO: Starting log timeout prevention process..."
   ( while true; do echo '.'; sleep 40; done ) &   # update STDOUT logs
   export timeout_loop_PID=$!
@@ -164,6 +193,10 @@ if [[ "$CI" == 'true' ]]; then
   init_trace_on
   SOLOIST_DIR="${GITHUB_WORKSPACE}/.."
   SPROUT_WRAP_BRANCH="$GITHUB_REF_NAME"
+elif [[ "$TEST_KITCHEN" == '1' ]]; then
+  init_trace_on
+  SOLOIST_DIR="/tmp/kitchen/soloist"
+  SPROUT_WRAP_BRANCH=$(get_git_head_branch)
 fi
 
 use_system_ruby=0
@@ -173,7 +206,7 @@ SOLOIST_DIR=${SOLOIST_DIR:-"${HOME}/src/pub/soloist"}
 SPROUT_WRAP_URL='https://github.com/LyraPhase/sprout-wrap.git'
 SPROUT_WRAP_BRANCH=${SPROUT_WRAP_BRANCH:-'master'}
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
-USER_AGENT="Chef Bootstrap/$(git rev-parse HEAD) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
+USER_AGENT="Chef Bootstrap/$(get_git_head_ref) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
 
 if [[ "${BASH_SOURCE[0]}" != '' ]]; then
   # Running from checked out script
@@ -256,7 +289,7 @@ fi
 
 # Hack to make sure sudo caches sudo password correctly...
 # And so it stays available for the duration of the Chef run
-if [[ "$CI" == 'true' ]]; then
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   set +x
   prevent_ci_log_timeout
   set -x
@@ -331,7 +364,7 @@ fi
 
 brew_install_rvm_libs
 
-if [[ "$CI" == 'true' ]]; then
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   echo "INFO: CI run detected via \$CI=$CI env var"
   echo "INFO: NOT checking out git repo"
   echo "INFO: Running soloist from ${REPO_BASE}/test/fixtures"
