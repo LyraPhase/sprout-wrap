@@ -1,0 +1,58 @@
+---
+driver:
+  name: vagrant
+  customize:
+    memory: 1024
+
+#provisioner:
+#  name: chef_zero
+#  deprecations_as_errors: true
+#  client_rb:
+#    chef_license: accept
+#    file_cache_path: /var/chef/cache
+#    ohai.optional_plugins:
+#        - :Passwd
+
+provisioner:
+  name: shell
+  root_path: '/tmp/kitchen/'
+  command: |-
+    sudo mkdir -p /var/chef/cache/hostname ;
+    sudo touch /var/chef/cache/last_software_update ;
+    cd /tmp/kitchen/soloist ;
+    ./bootstrap-scripts/bootstrap.sh ;
+
+verifier:
+  name: inspec
+  sudo: false
+
+platforms:
+  - name: ubuntu-20.04
+
+suites:
+  - name: default
+    includes: [ubuntu-20.04, macos-latest]
+  # - name: default-sudo
+  #   verifier:
+  #     sudo: true
+  #     inspec_tests:
+  #       - path: test/integration/sudo_tests/
+  #   includes: [ubuntu-20.04, macos-latest]
+  # #
+  # # resource tests
+  # #
+  # - name: resources-80
+  #   run_list:
+  #     - recipe[test::user_database]
+  #   attributes:
+  #     mysql_test:
+  #       version: '8.0'
+  #   verifier:
+  #     controls:
+  #       - mysql_database
+  #       - mysql_user
+  #     inputs:
+  #       version: '8.0'
+  #     inspec_tests:
+  #       - path: test/integration/resources
+  #   includes:
