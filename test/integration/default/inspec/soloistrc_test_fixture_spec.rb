@@ -46,5 +46,3 @@ pkgs.each do |pkg|
     it { should be_installed }
   end
 end
-
-
