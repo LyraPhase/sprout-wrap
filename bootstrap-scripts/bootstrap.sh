@@ -76,7 +76,7 @@ bypass_apple_tcc() {
   REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
 
   APP_CSREQ="X'${REQ_HEX}'"
-  for INPUT_SERVICE in ${INPUT_SERVICES[@]}; do
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
     sudo sqlite3 "$DATABASE_SYSTEM" "REPLACE INTO access VALUES('"$INPUT_SERVICE"','"$APP_ID"',1,2,4,1,${APP_CSREQ},NULL,?,NULL,NULL,0,?);"
   done
   rm -rf "$TCC_CSREQ_TMP_DIR"
