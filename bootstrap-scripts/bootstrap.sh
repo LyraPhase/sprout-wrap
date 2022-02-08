@@ -143,10 +143,10 @@ function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     export optflags="-Wno-error=implicit-function-declaration"
-    export LDFLAGS="-L/opt/homebrew/opt/libffi/lib"
-    export DLDFLAGS="-L/opt/homebrew/opt/libffi/lib"
-    export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
-    export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
+    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
     # Escape from current Gemfile.lock bundler version restriction for bootstrap
     # NOTE: This could cause problems in the future, b/c
     #       we depend on system bundler to write ~/.bundle/config here
@@ -161,13 +161,15 @@ function rvm_set_compile_opts() {
 }
 
 function brew_install_rvm_libs() {
-  if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
-    grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
-  fi
-  if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
-    grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
-    grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
-    grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+  if [[ "$CI" != 'true' ]]; then
+    if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
+      grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
+    fi
+    if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
+      grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
+      grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
+      grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+    fi
   fi
 }
 
@@ -397,8 +399,6 @@ if [[ "$INSTALL_SDK_HEADERS" == '1' ]]; then
   fi
 fi
 
-brew_install_rvm_libs
-
 if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   echo "INFO: CI run detected via \$CI=$CI env var"
   echo "INFO: NOT checking out git repo"
@@ -431,12 +431,14 @@ fi
 turn_trace_on_if_was_on
 
 if [ "$machine" == "arm64" ]; then
+  export HOMEBREW_PREFIX=/opt/homebrew
   export PATH="/opt/homebrew/bin:${PATH}"
 else
+  export HOMEBREW_PREFIX=/usr/local/homebrew
   export PATH="/usr/local/homebrew/bin:${PATH}"
 fi
 
-
+brew_install_rvm_libs
 # Install Chef Workstation SDK via Brewfile
 [ -x "$(command -v brew)" ] && brew bundle install
 
