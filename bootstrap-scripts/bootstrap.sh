@@ -136,7 +136,7 @@ function check_sprout_locked_ruby_versions() {
   sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
   sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
   sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
-  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | tr -d '[:blank:]')
+  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" "${REPO_BASE}/Gemfile.lock" | tail -n 1 | tr -d '[:blank:]')
 }
 
 function rvm_set_compile_opts() {
@@ -147,11 +147,15 @@ function rvm_set_compile_opts() {
     export DLDFLAGS="-L/opt/homebrew/opt/libffi/lib"
     export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
     export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
-    bundle config build.ffi --enable-system-libffi
+    # Escape from current Gemfile.lock bundler version restriction for bootstrap
+    # NOTE: This could cause problems in the future, b/c
+    #       we depend on system bundler to write ~/.bundle/config here
+    #       Let's hope they don't break config file API version
+    bash -c 'cd /tmp/ && bundle config build.ffi --enable-system-libffi'
   fi
 
   if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
-    bundle config build.nokogiri --platform=ruby -- --use-system-libraries
+    bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
   fi
   turn_trace_off
 }
