@@ -32,7 +32,7 @@ function detect_platform_version() {
 
 ## Find and return git repo HEAD ref SHA
 function get_git_head_ref() {
-  if which git 2>&1 >/dev/null; then
+  if which git 2>&1 >/dev/null && [ -d '/Applications/Xcode.app' ]; then
     git rev-parse HEAD
   else
     HASH="ref: HEAD";
@@ -52,7 +52,7 @@ function get_git_head_ref() {
 
 ## Find and return current HEAD symbolic branch ref
 function get_git_head_branch() {
-  if which git 2>&1 >/dev/null; then
+  if which git 2>&1 >/dev/null && [ -d '/Applications/Xcode.app' ]; then
     git branch --show-current
   else
     awk -F: '{ print $2 }'  .git/HEAD | sed -e 's#[[:space:]]*refs/heads/##'
