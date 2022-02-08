@@ -59,6 +59,29 @@ function get_git_head_branch() {
   fi
 }
 
+## Apple TCC (Transparency, Consent, and Control) Database entries to enable unattended provisioning
+## References:
+##   https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive
+##   https://stackoverflow.com/a/57259004/645491
+bypass_apple_tcc() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-csreq.XXXXXXXXXX)
+  DATABASE_SYSTEM="/Library/Application Support/com.apple.TCC/TCC.db"
+  INPUT_SERVICES=(kTCCServiceSystemPolicyAllFiles kTCCServicePostEvent kTCCServiceAccessibility)
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in ${INPUT_SERVICES[@]}; do
+    sudo sqlite3 "$DATABASE_SYSTEM" "REPLACE INTO access VALUES('"$INPUT_SERVICE"','"$APP_ID"',1,2,4,1,${APP_CSREQ},NULL,?,NULL,NULL,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
+}
+
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
   # Note: Don't use GNU expect... just a subshell (for some reason expect spawn jacks up readline input)
@@ -223,8 +246,9 @@ detect_platform_version
 case $platform_version in
   12.0*|12.1*|12.2*)
           XCODE_DMG='Xcode_13.2.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
-          BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
-  11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
+          BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
+  11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
+          BYPASS_APPLE_TCC="1" ;;
   10.15*) XCODE_DMG='Xcode_12.4.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.14*) XCODE_DMG='Xcode_11_GM_Seed.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.12*) XCODE_DMG='Xcode_8.1.xip' ;;
@@ -297,6 +321,13 @@ else
   prevent_sudo_timeout
 fi
 readonly timeout_loop_PID  # Make PID readonly for security ;-)
+
+# Bypass TCC
+if [[ "$BYPASS_APPLE_TCC" == '1' ]]; then
+  if [[ "$TEST_KITCHEN" == '1' ]]; then
+    bypass_apple_tcc '/usr/libexec/sshd-keygen-wrapper'
+  fi
+fi
 
 # Try xcode-select --install first
 if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
