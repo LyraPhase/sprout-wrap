@@ -16,11 +16,11 @@ driver:
 provisioner:
   name: shell
   root_path: '/tmp/kitchen/'
+  # sudo mount_9p da27a59e93d0feef5d80b94dd05b95c ;
+  # [ -e /tmp/kitchen/soloist/Xcode_13.2.xip ] || cp /Volumes/da27a59e93d0feef5d80b94dd05b95c/installers/mac/Xcode_13.2.xip  /tmp/kitchen/soloist/ ;
   command: |-
     sudo mkdir -p /var/chef/cache/hostname ;
     sudo touch /var/chef/cache/last_software_update ;
-    sudo mount_9p da27a59e93d0feef5d80b94dd05b95c ;
-    [ -e /tmp/kitchen/soloist/Xcode_13.2.xip ] || cp /Volumes/da27a59e93d0feef5d80b94dd05b95c/installers/mac/Xcode_13.2.xip  /tmp/kitchen/soloist/ ;
     cd /tmp/kitchen/soloist ;
     ./bootstrap-scripts/bootstrap.sh ;
 
