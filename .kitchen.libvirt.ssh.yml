@@ -23,6 +23,15 @@ driver:
     - 'test/fixtures/Vagrantfile.libvirt-ssh'
   synced_folders:
   - [".", "/tmp/kitchen/soloist", "disabled: false, type: 'rsync'"]
+  # TODO: Find & fix bugs in Vagrant where it checks for vagrant-host path... needs to support remote NFS & 9p libvirt mounts
+  # TODO: Fix mount: false setting for 9p
+  # TODO: Fix auto-mount capability for Darwin / macOS... needs mount_9p support (see man mount_9p)
+  #       Need to implement mount_9p_shared_folder capability for macOS / Darwin
+  #       https://github.com/vagrant-libvirt/vagrant-libvirt/search?q=mount_9p_shared_folder
+  # NOTE: For qemu+ssh remote libvirt VM, create a fake directory matching hostpath on the host running vagrant
+  #       In this use case, both hostpath & guestpath live on the same remote libvirt + qemu hypervisor host & VM (guest)
+  - ["/opt/export/terabyte", "/System/Volumes/Data/terabyte", "hostpath: '/export/terabyte', guestpath: '/System/Volumes/Data/terabyte', disabled: false, type: '9p', mount: false, accessmode: 'squash', owner:'1000'"]
+  # - ["/export/terabyte", "/System/Volumes/Data/terabyte", "disabled: false, type: 'nfs', nfs_export: false, bsd__nfs_options: '-fstype=nfs,nolockd,resvport,hard,bg,intr,rw,tcp,nfc'"]
 #    ssh_gateway_username: trinitronx
 
 #  customize:
