@@ -63,7 +63,7 @@ function get_git_head_branch() {
 ## References:
 ##   https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive
 ##   https://stackoverflow.com/a/57259004/645491
-bypass_apple_tcc() {
+bypass_apple_system_tcc() {
   APP_ID="$1"
 
   TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-csreq.XXXXXXXXXX)
@@ -78,6 +78,35 @@ bypass_apple_tcc() {
   APP_CSREQ="X'${REQ_HEX}'"
   for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
     sudo sqlite3 "$DATABASE_SYSTEM" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,4,1,${APP_CSREQ},NULL,?,NULL,NULL,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
+}
+
+bypass_apple_user_tcc_system_events() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-sysevents-csreq.XXXXXXXXXX)
+  DATABASE_USER="${HOME}/Library/Application Support/com.apple.TCC/TCC.db"
+  SYSTEM_EVENTS_APP="/System/Library/CoreServices/System Events.app"
+  INPUT_SERVICES=(kTCCServiceAppleEvents)
+  # Can be detected via: mdls -name kMDItemContentTypeTree "$SYSTEM_EVENTS_APP"
+  INDIRECT_OBJECT_ID_TYPE=0 # Bundle Identifier
+  INDIRECT_OBJECT_ID=com.apple.systemevents
+  SYS_EVENTS_IDENTIFIER=$(codesign -d -r- "$SYSTEM_EVENTS_APP" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  # Generate codesign request for INDIRECT_OBJECT_CODE_ID (identifier "com.apple.systemevents" and anchor apple)
+  echo "$SYS_EVENTS_IDENTIFIER" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin"
+  SYS_EVENTS_REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin" | tr -d '\n')
+  INDIRECT_OBJECT_CODE_ID_CSREQ="X'${SYS_EVENTS_REQ_HEX}'"
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
+    sudo sqlite3 "$DATABASE_USER" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,3,1,${APP_CSREQ},NULL,$INDIRECT_OBJECT_ID_TYPE,'$INDIRECT_OBJECT_ID',$INDIRECT_OBJECT_CODE_ID_CSREQ,0,?);"
   done
   rm -rf "$TCC_CSREQ_TMP_DIR"
 }
@@ -331,7 +360,10 @@ readonly timeout_loop_PID  # Make PID readonly for security ;-)
 # Bypass TCC
 if [[ "$BYPASS_APPLE_TCC" == '1' ]]; then
   if [[ "$TEST_KITCHEN" == '1' ]]; then
-    bypass_apple_tcc '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_system_tcc '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_user_tcc_system_events '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_system_tcc '/usr/bin/osascript'
+    bypass_apple_user_tcc_system_events '/usr/bin/osascript'
   fi
 fi
 
