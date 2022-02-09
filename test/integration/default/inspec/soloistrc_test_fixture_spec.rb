@@ -32,6 +32,26 @@ describe command('pmset -g') do
   its('stdout') { should match /^\s*sleep\s*0\s*.*$/ }
 end
 
+sysctl_params = {
+  'kern.sysv.shmmax': '16777216',
+  'kern.sysv.shmall': '65536',
+  'net.inet.tcp.always_keepalive': '1'
+}
+sysctl_params.each_pair do |k,v|
+  describe command("sysctl -n #{k}") do
+    its('stdout.chomp') { should eq v }
+  end
+end
+
+terminal_plist = '/Users/vagrant/Library/Preferences/com.apple.Terminal.plist'
+{
+  ':Window\ Settings:Pro:shellExitAction': '1',
+}.each_pair do |k,v|
+  describe command("/usr/libexec/PlistBuddy -c 'Print #{k}' #{terminal_plist}") do
+    its('stdout.chomp') { should eq v }
+  end
+end
+
 pkgs = [ 'bash-completion',
   'lua',
   'ssh-copy-id',
