@@ -30,6 +30,87 @@ function detect_platform_version() {
   fi
 }
 
+## Find and return git repo HEAD ref SHA
+function get_git_head_ref() {
+  if command -v git >/dev/null 2>&1 && [ -d '/Applications/Xcode.app' ]; then
+    git rev-parse HEAD
+  else
+    HASH="ref: HEAD";
+    while [[ "${HASH:0:4}" == "ref:" ]]; do
+      # Capture the HASH
+      REF="${HASH:5}"
+      if [[ ! -f ".git/$REF" ]]; then
+        echo "Failed to follow reference: '.git/$REF'!  This implies that " >&2
+        echo "this Git repository is broken!" >&2
+        HASH='UNKNOWN'
+      fi
+      HASH="$(cat ".git/$REF")"
+    done
+    echo -n "$HASH"
+  fi
+}
+
+## Find and return current HEAD symbolic branch ref
+function get_git_head_branch() {
+  if command -v git >/dev/null 2>&1 && [ -d '/Applications/Xcode.app' ]; then
+    git branch --show-current
+  else
+    awk -F: '{ print $2 }'  .git/HEAD | sed -e 's#[[:space:]]*refs/heads/##'
+  fi
+}
+
+## Apple TCC (Transparency, Consent, and Control) Database entries to enable unattended provisioning
+## References:
+##   https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive
+##   https://stackoverflow.com/a/57259004/645491
+bypass_apple_system_tcc() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-csreq.XXXXXXXXXX)
+  DATABASE_SYSTEM="/Library/Application Support/com.apple.TCC/TCC.db"
+  INPUT_SERVICES=(kTCCServiceSystemPolicyAllFiles kTCCServicePostEvent kTCCServiceAccessibility)
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
+    sudo sqlite3 "$DATABASE_SYSTEM" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,4,1,${APP_CSREQ},NULL,?,NULL,NULL,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
+}
+
+bypass_apple_user_tcc_system_events() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-sysevents-csreq.XXXXXXXXXX)
+  DATABASE_USER="${HOME}/Library/Application Support/com.apple.TCC/TCC.db"
+  SYSTEM_EVENTS_APP="/System/Library/CoreServices/System Events.app"
+  INPUT_SERVICES=(kTCCServiceAppleEvents)
+  # Can be detected via: mdls -name kMDItemContentTypeTree "$SYSTEM_EVENTS_APP"
+  INDIRECT_OBJECT_ID_TYPE=0 # Bundle Identifier
+  INDIRECT_OBJECT_ID=com.apple.systemevents
+  SYS_EVENTS_IDENTIFIER=$(codesign -d -r- "$SYSTEM_EVENTS_APP" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  # Generate codesign request for INDIRECT_OBJECT_CODE_ID (identifier "com.apple.systemevents" and anchor apple)
+  echo "$SYS_EVENTS_IDENTIFIER" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin"
+  SYS_EVENTS_REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin" | tr -d '\n')
+  INDIRECT_OBJECT_CODE_ID_CSREQ="X'${SYS_EVENTS_REQ_HEX}'"
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
+    sudo sqlite3 "$DATABASE_USER" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,3,1,${APP_CSREQ},NULL,$INDIRECT_OBJECT_ID_TYPE,'$INDIRECT_OBJECT_ID',$INDIRECT_OBJECT_CODE_ID_CSREQ,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
+}
+
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
   # Note: Don't use GNU expect... just a subshell (for some reason expect spawn jacks up readline input)
@@ -52,7 +133,7 @@ trap "exit" INT # Run exit when this script receives Ctrl-C
 ## CI has sudo, but long-running jobs can timeout
 ## unless log output is frequent enough
 prevent_ci_log_timeout() {
-  echo "INFO: CI run detected via \$CI=$CI env var"
+  echo "INFO: CI run detected via \$CI=$CI or \$TEST_KITCHEN=$TEST_KITCHEN env vars"
   echo "INFO: Starting log timeout prevention process..."
   ( while true; do echo '.'; sleep 40; done ) &   # update STDOUT logs
   export timeout_loop_PID=$!
@@ -84,34 +165,47 @@ function check_sprout_locked_ruby_versions() {
   sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
   sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
   sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
-  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | tr -d '[:blank:]')
+  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" "${REPO_BASE}/Gemfile.lock" | tail -n 1 | tr -d '[:blank:]')
 }
 
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
+
+  # Disable installing RI docs for speed
+  cat > "${HOME}/.gemrc" <<-EOF
+	install: --no-document
+	update: --no-document
+	EOF
+
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     export optflags="-Wno-error=implicit-function-declaration"
-    export LDFLAGS="-L/opt/homebrew/opt/libffi/lib"
-    export DLDFLAGS="-L/opt/homebrew/opt/libffi/lib"
-    export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
-    export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
-    bundle config build.ffi --enable-system-libffi
+    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
+    # Escape from current Gemfile.lock bundler version restriction for bootstrap
+    # NOTE: This could cause problems in the future, b/c
+    #       we depend on system bundler to write ~/.bundle/config here
+    #       Let's hope they don't break config file API version
+    bash -c 'cd /tmp/ && bundle config build.ffi --enable-system-libffi'
   fi
 
   if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
-    bundle config build.nokogiri --platform=ruby -- --use-system-libraries
+    bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
   fi
   turn_trace_off
 }
 
 function brew_install_rvm_libs() {
-  if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
-    grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
-  fi
-  if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
-    grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
-    grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
-    grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+  if [[ "$CI" != 'true' ]]; then
+    if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
+      grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
+    fi
+    if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
+      grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
+      grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
+      grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+    fi
   fi
 }
 
@@ -164,6 +258,10 @@ if [[ "$CI" == 'true' ]]; then
   init_trace_on
   SOLOIST_DIR="${GITHUB_WORKSPACE}/.."
   SPROUT_WRAP_BRANCH="$GITHUB_REF_NAME"
+elif [[ "$TEST_KITCHEN" == '1' ]]; then
+  init_trace_on
+  SOLOIST_DIR="/tmp/kitchen/soloist"
+  SPROUT_WRAP_BRANCH=$(get_git_head_branch)
 fi
 
 use_system_ruby=0
@@ -173,7 +271,7 @@ SOLOIST_DIR=${SOLOIST_DIR:-"${HOME}/src/pub/soloist"}
 SPROUT_WRAP_URL='https://github.com/LyraPhase/sprout-wrap.git'
 SPROUT_WRAP_BRANCH=${SPROUT_WRAP_BRANCH:-'master'}
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
-USER_AGENT="Chef Bootstrap/$(git rev-parse HEAD) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
+USER_AGENT="Chef Bootstrap/$(get_git_head_ref) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
 
 if [[ "${BASH_SOURCE[0]}" != '' ]]; then
   # Running from checked out script
@@ -190,8 +288,9 @@ detect_platform_version
 case $platform_version in
   12.0*|12.1*|12.2*)
           XCODE_DMG='Xcode_13.2.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
-          BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
-  11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
+          BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
+  11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
+          BYPASS_APPLE_TCC="1" ;;
   10.15*) XCODE_DMG='Xcode_12.4.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.14*) XCODE_DMG='Xcode_11_GM_Seed.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.12*) XCODE_DMG='Xcode_8.1.xip' ;;
@@ -256,7 +355,7 @@ fi
 
 # Hack to make sure sudo caches sudo password correctly...
 # And so it stays available for the duration of the Chef run
-if [[ "$CI" == 'true' ]]; then
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   set +x
   prevent_ci_log_timeout
   set -x
@@ -264,6 +363,16 @@ else
   prevent_sudo_timeout
 fi
 readonly timeout_loop_PID  # Make PID readonly for security ;-)
+
+# Bypass TCC
+if [[ "$BYPASS_APPLE_TCC" == '1' ]]; then
+  if [[ "$TEST_KITCHEN" == '1' ]]; then
+    bypass_apple_system_tcc '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_user_tcc_system_events '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_system_tcc '/usr/bin/osascript'
+    bypass_apple_user_tcc_system_events '/usr/bin/osascript'
+  fi
+fi
 
 # Try xcode-select --install first
 if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
@@ -329,9 +438,7 @@ if [[ "$INSTALL_SDK_HEADERS" == '1' ]]; then
   fi
 fi
 
-brew_install_rvm_libs
-
-if [[ "$CI" == 'true' ]]; then
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   echo "INFO: CI run detected via \$CI=$CI env var"
   echo "INFO: NOT checking out git repo"
   echo "INFO: Running soloist from ${REPO_BASE}/test/fixtures"
@@ -363,12 +470,14 @@ fi
 turn_trace_on_if_was_on
 
 if [ "$machine" == "arm64" ]; then
+  export HOMEBREW_PREFIX=/opt/homebrew
   export PATH="/opt/homebrew/bin:${PATH}"
 else
+  export HOMEBREW_PREFIX=/usr/local/homebrew
   export PATH="/usr/local/homebrew/bin:${PATH}"
 fi
 
-
+brew_install_rvm_libs
 # Install Chef Workstation SDK via Brewfile
 [ -x "$(command -v brew)" ] && brew bundle install
 

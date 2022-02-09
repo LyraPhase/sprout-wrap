@@ -205,6 +205,8 @@ node_attributes:
 #      - chromedriver
       - docker-machine
       - docker-machine-nfs
+      - libvirt
+      - qemu
 #      - imagemagick
       - openssl
       - xz
@@ -215,6 +217,8 @@ node_attributes:
       - iperf3
 #      - qt
       - ssh-copy-id
+      - pre-commit
+      - shellcheck
       - tmux
 # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
 # Also fixes Sublime Text "subl" command not working
