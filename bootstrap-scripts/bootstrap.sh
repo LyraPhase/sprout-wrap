@@ -170,6 +170,13 @@ function check_sprout_locked_ruby_versions() {
 
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
+
+  # Disable installing RI docs for speed
+  cat > "${HOME}/.gemrc" <<-EOF
+	install: --no-document
+	update: --no-document
+	EOF
+
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     export optflags="-Wno-error=implicit-function-declaration"
     export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
