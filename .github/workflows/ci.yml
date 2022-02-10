@@ -35,11 +35,6 @@ jobs:
       matrix:
         os: [macos-11]
     steps:
-      - name: Set debug_ci - workaround for actions/runner#480
-        run: echo '::set-output name=DEBUG_CI::${{ env.debug_ci }}'
-        id: workaround_runner_480
-      - name: Get debug_ci
-        run: echo "debug_ci ${{ steps.workaround_runner_480.outputs.DEBUG_CI }}"
       - name: Check out code
         uses: actions/checkout@v2
       - name: Add --no-document to .gemrc
@@ -63,12 +58,6 @@ jobs:
       - name: Set BREWFILE_PATH env var
         run: |
           echo "BREWFILE_PATH=${GITHUB_WORKSPACE}/test/fixtures/tmp/Brewfile.ci" >> $GITHUB_ENV
-      - name: DEBUG - Echo global env
-        run: echo 'Hi ${{ env.custom_var }}'  # Hi Global
-      - name: DEBUG - Echo local env
-        run: echo 'Hi ${{ env.custom_var }}'  # Hi Local
-        env:
-          custom_var: Local
       - name: DEBUG - Echo debug_ci
         run: echo 'env.debug_ci = ${{ env.debug_ci }}'
       - name: DEBUG - debug_ci is boolean?
