@@ -14,6 +14,8 @@ name: ci
       - develop
 env:
   debug_ci: true
+  custom_var: Global
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -56,6 +58,14 @@ jobs:
       - name: Set BREWFILE_PATH env var
         run: |
           echo "BREWFILE_PATH=${GITHUB_WORKSPACE}/test/fixtures/tmp/Brewfile.ci" >> $GITHUB_ENV
+      - name: DEBUG - Echo global env
+        run: echo 'Hi ${{ env.custom_var }}'  # Hi Global
+      - name: DEBUG - Echo local env
+        run: echo 'Hi ${{ env.custom_var }}'  # Hi Local
+        env:
+          custom_var: Local
+      - name: DEBUG - Echo debug_ci
+        run: echo 'env.debug_ci = ${{ env.debug_ci }}'
       - name: DEBUG - GitHub Cache Paths BREWFILE_PATH
         run: |
           echo BREWFILE_PATH=$BREWFILE_PATH
