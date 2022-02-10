@@ -74,7 +74,7 @@ jobs:
       - name: DEBUG - debug_ci is boolean?
         run: echo 'env.debug_ci boolean? = ${{ env.debug_ci == true }}'
       - name: DEBUG - debug_ci is string?
-        run: echo 'env.debug_ci string? = ${{ env.debug_ci == "true" }}'
+        run: echo 'env.debug_ci string? = ${{ env.debug_ci == 'true' }}'
       - name: DEBUG - GitHub Cache Paths BREWFILE_PATH
         run: |
           echo BREWFILE_PATH=$BREWFILE_PATH
