@@ -222,8 +222,10 @@ node_attributes:
       - gomplate
       - mockery
       - node
+      - nvm
       - lua
       - java
+      - sbt
       # - maven
       # - thrift
       # - jfrog-cli-go
@@ -336,6 +338,8 @@ node_attributes:
       - vlc
       # C/C++ linting & formatting tool
       - oclint
+      # Corretto Java
+      - corretto8
 
   workspace_directory: src
   vim_alias_vi_to_minimal_vim: false
