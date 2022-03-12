@@ -13,7 +13,9 @@ name: ci
       - main
       - develop
 env:
-  debug_ci: false
+  debug_ci: true
+  custom_var: Global
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -60,17 +62,21 @@ jobs:
         run: |
           echo BREWFILE_PATH=$BREWFILE_PATH
           echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
-        if: env.debug_ci == true
+        if: env.debug_ci == 'true'
       - name: DEBUG - Print all shell env exports
         run: export -p
-        if: env.debug_ci == true
+        if: env.debug_ci == 'true'
       - name: DEBUG - List workspace and Homebrew contents
         run: |
           ls -lR ${GITHUB_WORKSPACE}
           ls -lR /usr/local/Homebrew
-        if: env.debug_ci == true
+        if: env.debug_ci == 'true'
       - name: Generate Brewfile from soloistrc test fixture
         run: make brewfile
+      - name: DEBUG - Where are Brewfiles?
+        run: |
+          find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
+        if: env.debug_ci == 'true'
       - name: Configure Homebrew cache
         uses: actions/cache@v2
         with:
@@ -98,3 +104,8 @@ jobs:
       - name: Run bootstrap.sh + soloist with test fixtures
         run: |
           make bootstrap
+      - name: DEBUG - Where are Brewfiles? (exclude nodes and vendor dirs)
+        run: |
+          sudo chown -R $(id -u):$(id -g) ${GITHUB_WORKSPACE}/test/fixtures/nodes
+          find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
+        if: env.debug_ci == 'true'
