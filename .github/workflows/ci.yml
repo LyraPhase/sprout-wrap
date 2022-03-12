@@ -13,7 +13,7 @@ name: ci
       - main
       - develop
 env:
-  debug_perms: true
+  debug_perms: false
   debug_ci: true
   custom_var: Global
 
@@ -112,4 +112,5 @@ jobs:
       - name: DEBUG - Where are Brewfiles? (exclude nodes and vendor dirs)
         run: |
           find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
-        if: env.debug_ci == 'true'
+        if: env.debug_perms == 'true'
+#        if: env.debug_ci == 'true'
