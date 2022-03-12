@@ -73,6 +73,10 @@ jobs:
         if: env.debug_ci == 'true'
       - name: Generate Brewfile from soloistrc test fixture
         run: make brewfile
+      - name: DEBUG - Where are Brewfiles?
+        run: |
+          find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
+        if: env.debug_ci == 'true'
       - name: Configure Homebrew cache
         uses: actions/cache@v2
         with:
