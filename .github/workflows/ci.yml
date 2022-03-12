@@ -106,5 +106,6 @@ jobs:
           make bootstrap
       - name: DEBUG - Where are Brewfiles? (exclude nodes and vendor dirs)
         run: |
+          sudo chown -R $(id -u):$(id -g) ${GITHUB_WORKSPACE}/test/fixtures/nodes
           find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
         if: env.debug_ci == 'true'
