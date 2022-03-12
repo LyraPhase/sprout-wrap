@@ -88,9 +88,9 @@ jobs:
             /usr/local/Homebrew/Library/Taps/**
             /opt/Homebrew/Library/Taps/**
             ./Brewfile.lock.json
-          key: brew-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles( env.BREWFILE_PATH, '**/Brewfile.lock.json') }}
+          key: brew-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles( env.BREWFILE_PATH, '**/Brewfile.lock.json', '.github/clear_github_actions_cache') }}
           restore-keys: |
-            brew-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles( env.BREWFILE_PATH, '**/Brewfile.lock.json') }}
+            brew-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles( env.BREWFILE_PATH, '**/Brewfile.lock.json', '.github/clear_github_actions_cache') }}
             brew-${{ runner.os }}-${{ runner.arch }}-
             brew-${{ runner.os }}-
       - name: Re-enable checksum offloading
