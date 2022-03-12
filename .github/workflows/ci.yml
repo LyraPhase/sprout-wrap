@@ -69,7 +69,7 @@ jobs:
         if: env.debug_ci == 'true'
       - name: DEBUG - List workspace and Homebrew contents
         run: |
-          ls -lR ${GITHUB_WORKSPACE}
+          ls -lAR ${GITHUB_WORKSPACE}
           ls -lR /usr/local/Homebrew
         if: env.debug_ci == 'true'
       - name: Generate Brewfile from soloistrc test fixture
