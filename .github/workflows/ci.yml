@@ -13,7 +13,7 @@ name: ci
       - main
       - develop
 env:
-  debug_perms: false
+  debug_perms: true
   debug_ci: true
   custom_var: Global
 
