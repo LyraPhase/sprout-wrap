@@ -104,3 +104,7 @@ jobs:
       - name: Run bootstrap.sh + soloist with test fixtures
         run: |
           make bootstrap
+      - name: DEBUG - Where are Brewfiles?
+        run: |
+          find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
+        if: env.debug_ci == 'true'
