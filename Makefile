@@ -58,6 +58,17 @@ $(BREWFILE_PATH): $(SOLOISTRC_PATH)
 	export SOLOISTRC_PATH=$(SOLOISTRC_PATH) BREWFILE_PATH=$(BREWFILE_PATH); \
     bundle exec ruby ./bin/convert_soloistrc_to_brewfile.rb
 
+.github/clear_github_actions_cache:
+	date  +%s > .github/clear_github_actions_cache
+
+.PHONY: clean-github-cache-file clear-github-cache
+clear-github-cache: clean-github-cache-file .github/clear_github_actions_cache ## Force GitHub Actions Cache key to change for fresh CI run
+	git add .github/clear_github_actions_cache
+	git commit -m "Clear GitHub Actions Cache @ $$(cat .github/clear_github_actions_cache)"
+
+clean-github-cache-file: ## Remove GitHub Actions Cache timestamp invalidator file.
+	[ -f '.github/clear_github_actions_cache' ] && rm -f '.github/clear_github_actions_cache' || true
+
 clean:: ## Remove temporary/cache files.
 	[ -d '$(TEMP_PATH)' ] && rm -rf $(TEMP_PATH) || true
 	[ -d 'tmp/librarian/' ] && rm -rf tmp/librarian/ || true

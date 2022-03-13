@@ -259,6 +259,10 @@ Some helpful commands and tricks to know when working on this repo:
 
         make help
 
+7. To clear GitHub Actions Cache (invalidates hash key prefix):
+
+        make clear-github-cache
+
 ## Roadmap
 
 See LyraPhase Sprout Project Tracker: <https://github.com/orgs/LyraPhase/projects/1>
