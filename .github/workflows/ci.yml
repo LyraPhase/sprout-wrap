@@ -13,8 +13,7 @@ name: ci
       - main
       - develop
 env:
-  debug_ci: true
-  custom_var: Global
+  debug_ci: false
 
 jobs:
   test:
