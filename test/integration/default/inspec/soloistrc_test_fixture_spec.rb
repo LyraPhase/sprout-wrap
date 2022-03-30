@@ -57,7 +57,6 @@ pkgs = [ 'bash-completion',
   'ssh-copy-id',
   'mediainfo',
   'sleepwatcher',
-  'lazydocker',
   'lsusb'
 ]
 
