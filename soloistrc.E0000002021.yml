@@ -226,6 +226,7 @@ node_attributes:
       - nmap
       - watch
       - wget
+      - act
       - gist
       - hub
       - travis
