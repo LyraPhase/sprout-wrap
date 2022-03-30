@@ -77,7 +77,7 @@ jobs:
           find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
         if: env.debug_ci == 'true'
       - name: Configure Homebrew cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/Library/Caches/Homebrew/*--*
