@@ -199,6 +199,8 @@ node_attributes:
       - kubernetes-cli
       - kubectx
       - kops
+      - eksctl
+      - argocd
       - minikube
       - imagemagick
       - openssl
@@ -295,6 +297,7 @@ node_attributes:
       - hex-fiend
       - beyond-compare
       - rar
+      - zoom
       ## Commented out until they update to Sublime Text 3
       - sublime-text
       - meld
