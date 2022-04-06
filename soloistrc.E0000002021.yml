@@ -236,6 +236,7 @@ node_attributes:
       - parallel
       # - macvim ## Broken compile w/RVM installed
       - wemux
+      - aws-iam-authenticator
       - awscli
       - s3cmd
       - gettext
