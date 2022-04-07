@@ -21,7 +21,8 @@ Recipes to Merge in
 - [DaisyDisk Recipe](https://github.com/trinitronx/sprout/blob/develop/sprout-osx-apps/recipes/daisydisk.rb)
 - Maybe??
   - `sprout-osx-base::apple-gcc42` => sprout-homebrew: formulae: `apple-gcc42`
-  - hub config with node-specific encrypted data_bag support for tokens
+  - hub config with node-specific encrypted `data_bag` support for tokens
+- Create new recipe for [link `gpg` `SSH_AUTH_SOCK` to `gpg-agent`][9] `LaunchAgent`
 
 macOS Deprecated Cookbook Upgrades
 ==================================
@@ -100,3 +101,4 @@ Misc
 [6]: https://github.com/microsoft/macos-cookbook/blob/master/resources/plist.rb
 [7]: https://github.blog/2021-09-01-improving-git-protocol-security-github/
 [8]: https://docs.docker.com/desktop/mac/apple-silicon/
+[9]: https://evilmartians.com/chronicles/stick-with-security-yubikey-ssh-gnupg-macos
