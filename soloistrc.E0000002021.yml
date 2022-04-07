@@ -196,6 +196,7 @@ node_attributes:
       - docker-machine-nfs
       - terraform
       - vault
+      - k9s
       - kubernetes-cli
       - kubectx
       - kops
@@ -236,6 +237,7 @@ node_attributes:
       - parallel
       # - macvim ## Broken compile w/RVM installed
       - wemux
+      - aws-iam-authenticator
       - awscli
       - s3cmd
       - gettext

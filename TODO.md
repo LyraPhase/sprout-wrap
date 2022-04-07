@@ -88,6 +88,9 @@ Misc
 
         ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+- Add recipe for [installing Rosetta][8] on M1 Macs / Apple Silicon:
+
+        softwareupdate --install-rosetta
 
 [1]: https://github.com/pivotal-sprout/osx
 [2]: https://github.com/pivotal-sprout/sprout-osx-settings
@@ -96,3 +99,4 @@ Misc
 [5]: https://github.com/carsomyr/chef-plist/tree/master/vendor/cookbooks/plist
 [6]: https://github.com/microsoft/macos-cookbook/blob/master/resources/plist.rb
 [7]: https://github.blog/2021-09-01-improving-git-protocol-security-github/
+[8]: https://docs.docker.com/desktop/mac/apple-silicon/
