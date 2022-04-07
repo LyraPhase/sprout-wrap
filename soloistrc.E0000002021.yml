@@ -285,7 +285,7 @@ node_attributes:
       - wacom-tablet
       - gpg-suite
       - veracrypt
-      - osxfuse
+      - macfuse
       - lastpass
 #      - keybase
       - yubico-authenticator
