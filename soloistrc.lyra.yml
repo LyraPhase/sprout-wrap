@@ -292,6 +292,7 @@ node_attributes:
 #      - google-hangouts
       - elektron-overbridge
       - logitech-options
+      - wacom-tablet
       - skype
       - steam
       - textmate
