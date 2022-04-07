@@ -196,6 +196,7 @@ node_attributes:
       - docker-machine-nfs
       - terraform
       - vault
+      - k9s
       - kubernetes-cli
       - kubectx
       - kops
