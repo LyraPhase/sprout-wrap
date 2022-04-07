@@ -278,7 +278,6 @@ node_attributes:
       - docker
       # - docker-edge
       - vagrant
-      - vmware-fusion
       - wireshark
       - xquartz
       - xscope
