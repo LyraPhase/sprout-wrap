@@ -34,6 +34,8 @@ macOS Deprecated Cookbook Upgrades
 - [carsomyr/chef-plist][5] cookbook needs replacement!
   - Must support some form of `plist_file` LWRP
   - [microsoft/macos-cookbook][6] provides this too... :thinking:
+- Non-critical: `sprout-osx-apps::iterm2` superceded by `lyraphase_workstation::iterm2`
+  - Fix Idempotency issue with config file: `/Users/jcuzella/Library/Preferences/com.googlecode.iterm2.plist`
 
 Deprecation warnings that must be addressed before upgrading to Chef Infra 18:
 
