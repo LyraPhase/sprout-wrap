@@ -2,6 +2,7 @@
 recipes:
 
   # base (required by sprout)
+  - lyraphase_workstation::root_bootstrap_ssh_config
   - sprout-base
   - sprout-base::bash_it
   - sprout-base::var_chef_cache
@@ -13,6 +14,7 @@ recipes:
   - sprout-ssh::known_hosts_github
   - sprout-ssh::dot_ssh_config_github
   - sprout-git::global_config
+  - lyraphase_workstation::user_default_shell
   - lyraphase_workstation::homebrew_sudoers  # Workaround for chef-cookbooks/homebrew#105
   - homebrew
   - homebrew::install_taps
@@ -207,9 +209,12 @@ node_attributes:
       - eksctl
       - rancher-cli
       - kustomize
+      - k9s
       - kubernetes-cli
       - kubectx
       - kops
+      - eksctl
+      - argocd
       - minikube
       - lazydocker
       # Kafka Cat
@@ -255,17 +260,18 @@ node_attributes:
       - nmap
       - watch
       - wget
+      - act
       - gist
       - gh
       - hub
       - travis
       - mosh
       - parallel
-      - macvim
+      # - macvim ## Broken compile w/RVM installed
       - wemux
+      - aws-iam-authenticator
       - awscli
       - s3cmd
-      - ack
       - gettext
       - mediainfo
       - sleepwatcher
@@ -306,19 +312,18 @@ node_attributes:
       # - docker-edge
       - vagrant
       - vagrant-vmware-utility
-      # - virtualbox ## arm64 not supported
-      # - virtualbox-extension-pack
       - vmware-fusion-tech-preview
       - wireshark
       - xquartz
       - xscope
       - logitech-options
+      - wacom-tablet
       - gpg-suite
       - veracrypt
-      # - osxfuse ## Does not support arm64 / M1
+      - macfuse
       - lastpass
       - 1password
-#      - keybase
+      # - keybase
       - yubico-authenticator
       - yubico-yubikey-manager
       - yubico-yubikey-piv-manager
@@ -330,6 +335,7 @@ node_attributes:
       - hex-fiend
       - beyond-compare
       - rar
+      - zoom
       ## Commented out until they update to Sublime Text 3
       - sublime-text
       - visual-studio-code
