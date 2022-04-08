@@ -278,9 +278,6 @@ node_attributes:
       - docker
       # - docker-edge
       - vagrant
-      - virtualbox
-      - virtualbox-extension-pack
-      - vmware-fusion
       - wireshark
       - xquartz
       - xscope
@@ -288,7 +285,7 @@ node_attributes:
       - wacom-tablet
       - gpg-suite
       - veracrypt
-      - osxfuse
+      - macfuse
       - lastpass
 #      - keybase
       - yubico-authenticator
