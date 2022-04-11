@@ -271,6 +271,7 @@ node_attributes:
       - wemux
       - aws-iam-authenticator
       - awscli
+      - awslogs
       - s3cmd
       - gettext
       - mediainfo
