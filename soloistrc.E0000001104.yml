@@ -333,6 +333,7 @@ node_attributes:
       - aws-vpn-client
       - cyberduck
       - pcloud-drive
+      - box-drive
       - hex-fiend
       - beyond-compare
       - rar
