@@ -319,6 +319,7 @@ node_attributes:
       - xscope
       - logitech-options
       - wacom-tablet
+      - sketch
       - gpg-suite
       - veracrypt
       - macfuse
