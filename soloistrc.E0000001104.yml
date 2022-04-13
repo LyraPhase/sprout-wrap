@@ -320,6 +320,7 @@ node_attributes:
       - logitech-options
       - wacom-tablet
       - sketch
+      - inkscape
       - gpg-suite
       - veracrypt
       - macfuse
