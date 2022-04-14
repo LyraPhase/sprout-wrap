@@ -220,6 +220,7 @@ node_attributes:
       # Kafka Cat
       - kcat
       - imagemagick
+      - graphviz
       - openssl
       # - mitmproxy
       - xz
