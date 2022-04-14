@@ -209,6 +209,7 @@ node_attributes:
       - eksctl
       - rancher-cli
       - kustomize
+      - k3d
       - k9s
       - kubernetes-cli
       - kubectx
