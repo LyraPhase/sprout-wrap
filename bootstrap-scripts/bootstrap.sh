@@ -286,8 +286,8 @@ detect_platform_version
 # Determine which XCode version to use based on platform version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
-  12.0*|12.1*|12.2*)
-          XCODE_DMG='Xcode_13.2.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
+  12.*)
+          XCODE_DMG='Xcode_13.3.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
           BYPASS_APPLE_TCC="1" ;;

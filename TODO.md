@@ -95,6 +95,8 @@ Misc
 
         softwareupdate --install-rosetta
 
+- Idea: Switch to installing Xcode via [xcodes][10] and [Homebrew formula][11] to avoid the automation headaches
+
 [1]: https://github.com/pivotal-sprout/osx
 [2]: https://github.com/pivotal-sprout/sprout-osx-settings
 [3]: https://github.com/Sous-Chefs-Boneyard/mac_os_x/issues/20
@@ -104,3 +106,5 @@ Misc
 [7]: https://github.blog/2021-09-01-improving-git-protocol-security-github/
 [8]: https://docs.docker.com/desktop/mac/apple-silicon/
 [9]: https://evilmartians.com/chronicles/stick-with-security-yubikey-ssh-gnupg-macos
+[10]: https://github.com/RobotsAndPencils/xcodes
+[11]: https://github.com/RobotsAndPencils/homebrew-made/blob/master/Formula/xcodes.rb

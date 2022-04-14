@@ -220,6 +220,7 @@ node_attributes:
       # Kafka Cat
       - kcat
       - imagemagick
+      - graphviz
       - openssl
       # - mitmproxy
       - xz
@@ -271,6 +272,7 @@ node_attributes:
       - wemux
       - aws-iam-authenticator
       - awscli
+      - awslogs
       - s3cmd
       - gettext
       - mediainfo
@@ -318,6 +320,8 @@ node_attributes:
       - xscope
       - logitech-options
       - wacom-tablet
+      - sketch
+      - inkscape
       - gpg-suite
       - veracrypt
       - macfuse
@@ -332,6 +336,7 @@ node_attributes:
       - aws-vpn-client
       - cyberduck
       - pcloud-drive
+      - box-drive
       - hex-fiend
       - beyond-compare
       - rar
