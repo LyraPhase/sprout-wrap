@@ -7,11 +7,11 @@ on:
   # Trigger on pull request events tagged 'release' only for the develop branch
   pull_request:
     branches: [ develop ]
-    types: [ labeled ]
+    types: [ labeled, closed ]
 
 jobs:
   automerge:
-    if: github.event.label.name == 'release'
+    if: github.event.label.name == 'release' and github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
