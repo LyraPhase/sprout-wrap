@@ -1,6 +1,6 @@
 # Merge PRs labeled release to master
 
-name: GitFlow
+name: git-flow-automerge
 
 # Controls when the workflow will run
 on:
