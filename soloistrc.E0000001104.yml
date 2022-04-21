@@ -229,6 +229,8 @@ node_attributes:
       - gomplate
       - gopls
       - delve
+      - terraform-docs
+      - tflint
       - mockery
       - node
       - nvm
