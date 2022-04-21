@@ -4,6 +4,12 @@ recipes:
 - sprout-base
 - sprout-base::bash_it
 
+# Need user git config for 1st time bootstrap
+### TODO: Fix known_hosts_github to use ssh-keyscan, or attributes
+### TODO: Install github known_hosts for root also! (bash-it fails b/c git ls-remote is run via root)
+- sprout-ssh::known_hosts_github
+- sprout-ssh::dot_ssh_config_github
+- sprout-git::global_config
 - lyraphase_workstation::homebrew_sudoers # Workaround for chef-cookbooks/homebrew#105
 - homebrew
 - homebrew::install_taps
@@ -53,7 +59,7 @@ recipes:
 #- sprout-postgresql
 
 # apps (editors)
-- sprout-jetbrains-editors::rubymine
+#- sprout-jetbrains-editors::rubymine
 
 # apps (added for gloo)
 #- sprout-osx-apps::cyberduck
@@ -97,13 +103,13 @@ recipes:
 node_attributes:
   current_user: jcuzella
   bash_it:
+    repository: 'https://github.com/Bash-it/bash-it.git'
     enabled_plugins:
       plugins:
         - base
         - osx
         - rvm
         - ssh
-        - vagrant
       aliases:
         - ag
         - bundler
@@ -120,6 +126,7 @@ node_attributes:
         - rake
         - ssh
         - tmux
+        - vagrant
     custom_plugins:
       sprout-base:
         - bash_it/custom/disable_ctrl-s_output_control.bash
@@ -184,12 +191,11 @@ node_attributes:
         merge.tool: meld
   homebrew:
     taps:
-      - caskroom/versions
       - homebrew/versions
-      - homebrew/completions
-      - trinitronx/truecrypt
+      - homebrew/homebrew-core
       - jlhonora/lsusb
       - caskroom/drivers
+      - chef/homebrew-chef
     formulas:
       - bash-completion
 #      - ctags-exuberant
@@ -199,6 +205,8 @@ node_attributes:
 #      - chromedriver
       - docker-machine
       - docker-machine-nfs
+      - libvirt
+      - qemu
 #      - imagemagick
       - openssl
       - xz
@@ -206,9 +214,11 @@ node_attributes:
       - p7zip
       - pstree
       - htop-osx
-#      - iperf3
+      - iperf3
 #      - qt
       - ssh-copy-id
+      - pre-commit
+      - shellcheck
       - tmux
 # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
 # Also fixes Sublime Text "subl" command not working
@@ -221,14 +231,21 @@ node_attributes:
 #      - rbenv-gem-rehash
       - gist
       - hub
+      - git-subrepo
       - mosh
 #      - parallel
       - wemux
       - s3cmd
       - ack
+      - cfv
+      - fio
       - name: ffmpeg
         options: --with-fdk-aac --with-fontconfig --with-freetype --with-libass --with-libbluray --with-libsoxr --with-libssh --with-libvorbis --with-opencore-amr --with-openh264 --with-openjpeg --with-openssl --with-sdl2 --with-snappy --with-tools --with-webp --with-x265 --with-xz
       - mediainfo
+      - bpm-tools
+      - sox
+      - guetzli
+      - youtube-dl
       - sleepwatcher
       - wakeonlan
       - mtr
@@ -244,33 +261,47 @@ node_attributes:
       - coreutils
       - lsusb
     casks:
-# Resin.io mmc card img writer tool
-      - etcher
+      - asana
+# Balena.io (formerly Resin.io) mmc card img writer tool
+      - balenaetcher
 # Let the lyraphase_workstation::airfoil recipe do this instead
 #      - airfoil
+#      - loopback ## TODO
       - keyfinder
+      - blackhole
+      - elektron-overbridge
       - soundflowerbed
       - ocenaudio
+      - streamlabs-obs
+      - obs
+      - jamkazam
 #      - ccmenu
 #      - cord
       - firefox
-      - fitbit-connect
-      - flux
 #      - freefilesync
 #      - gitx-rowanj
-      - github-desktop
+      - garmin-express
+      - github
       - google-chrome
-      - google-drive
-      - chefdk
-      - near-lock
+      - kid3
+      - chef-workstation
+      - mixed-in-key
+      - musicbrainz-picard
       - netspot
+      - openvpn-connect
 #      - google-hangouts
-      - razer-synapse
+      - elektron-overbridge
+      - logitech-options
+      - wacom-tablet
       - skype
       - steam
-      - tomtom-mysports-connect
       - textmate
+      - surge-synthesizer
+      - sysex-librarian
+      - waves-central
+      - vcv-rack
       - vagrant
+      - vagrant-vmware-utility
       - virtualbox
       - virtualbox-extension-pack
       - vmware-fusion
@@ -279,16 +310,17 @@ node_attributes:
       - xscope
       - keybase
       - gpg-suite
-      - truecrypt
+      - veracrypt
+      - osxfuse
       - lastpass
       - yubico-authenticator
       - yubico-yubikey-manager
       - yubico-yubikey-piv-manager
       - yubico-yubikey-personalization-gui
       - java
-      - processing
 #      - cyberduck
       - dropbox
+      - zoom
 #      - hex-fiend
 #      - beyond-compare
 #      - mumble
@@ -316,8 +348,8 @@ node_attributes:
 #        registration_key:
 #    airfoil:
 #      license:
-#        code: 
-#        name: 
+#        code:
+#        name:
   lyraphase_workstation:
     ableton_live:
       managed_versions: all
@@ -332,4 +364,5 @@ node_attributes:
 #        app: Ableton Live 9.7 Beta
     nfs_mounts:
       - "#/../Volumes/saturn    -fstype=nfs,noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export"
-      - "/../Volumes/terabyte    -fstype=nfs,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"
+      - "/../Volumes/terabyte    -fstype=nfs,vers=3,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"
+      - "/System/Volumes/Data/../Data/Volumes/terabyte    -fstype=nfs,vers=3,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"

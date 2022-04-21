@@ -4,12 +4,12 @@
 #
 # Usage:
 #   Running the script remotely:
-#     bash < <(curl -s https://raw.github.com/trinitronx/sprout-wrap/spica-local-devbox/bootstrap-scripts/bootstrap.sh )
+#     bash < <(curl -s https://raw.github.com/LyraPhase/sprout-wrap/master/bootstrap-scripts/bootstrap.sh )
 #   Running the script if you have downloaded it:
 #     ./bootstrap.sh
 #
-# http://github.com/trinitronx/sprout-wrap
-# (c) 2013-2017, James Cuzella
+# http://github.com/LyraPhase/sprout-wrap
+# Copyright (C) © 🄯  2013-2021 James Cuzella
 # This script may be freely distributed under the MIT license.
 
 ## Figure out OSX version (source: https://www.opscode.com/chef/install.sh)
@@ -17,13 +17,98 @@ function detect_platform_version() {
   # Matching the tab-space with sed is error-prone
   platform_version=$(sw_vers | awk '/^ProductVersion:/ { print $2 }')
 
-  major_version=$(echo $platform_version | cut -d. -f1,2)
-  
+  major_version=$(echo "$platform_version" | cut -d. -f1,2)
+
   # x86_64 Apple hardware often runs 32-bit kernels (see OHAI-63)
+  # macOS Monterey + Apple M1 Silicon (arm64) gives empty string for this x86_64 check
   x86_64=$(sysctl -n hw.optional.x86_64)
-  if [ $x86_64 -eq 1 ]; then
+  arm64=$(sysctl -n hw.optional.arm64)
+  if [[ "$x86_64" == '1' ]]; then
     machine="x86_64"
+  elif [[ "$arm64" == '1' ]]; then
+    machine="arm64"
   fi
+}
+
+## Find and return git repo HEAD ref SHA
+function get_git_head_ref() {
+  if command -v git >/dev/null 2>&1 && [ -d '/Applications/Xcode.app' ]; then
+    git rev-parse HEAD
+  else
+    HASH="ref: HEAD";
+    while [[ "${HASH:0:4}" == "ref:" ]]; do
+      # Capture the HASH
+      REF="${HASH:5}"
+      if [[ ! -f ".git/$REF" ]]; then
+        echo "Failed to follow reference: '.git/$REF'!  This implies that " >&2
+        echo "this Git repository is broken!" >&2
+        HASH='UNKNOWN'
+      fi
+      HASH="$(cat ".git/$REF")"
+    done
+    echo -n "$HASH"
+  fi
+}
+
+## Find and return current HEAD symbolic branch ref
+function get_git_head_branch() {
+  if command -v git >/dev/null 2>&1 && [ -d '/Applications/Xcode.app' ]; then
+    git branch --show-current
+  else
+    awk -F: '{ print $2 }'  .git/HEAD | sed -e 's#[[:space:]]*refs/heads/##'
+  fi
+}
+
+## Apple TCC (Transparency, Consent, and Control) Database entries to enable unattended provisioning
+## References:
+##   https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive
+##   https://stackoverflow.com/a/57259004/645491
+bypass_apple_system_tcc() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-csreq.XXXXXXXXXX)
+  DATABASE_SYSTEM="/Library/Application Support/com.apple.TCC/TCC.db"
+  INPUT_SERVICES=(kTCCServiceSystemPolicyAllFiles kTCCServicePostEvent kTCCServiceAccessibility)
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
+    sudo sqlite3 "$DATABASE_SYSTEM" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,4,1,${APP_CSREQ},NULL,?,NULL,NULL,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
+}
+
+bypass_apple_user_tcc_system_events() {
+  APP_ID="$1"
+
+  TCC_CSREQ_TMP_DIR=$(mktemp -d /tmp/bypass-apple-tcc-sysevents-csreq.XXXXXXXXXX)
+  DATABASE_USER="${HOME}/Library/Application Support/com.apple.TCC/TCC.db"
+  SYSTEM_EVENTS_APP="/System/Library/CoreServices/System Events.app"
+  INPUT_SERVICES=(kTCCServiceAppleEvents)
+  # Can be detected via: mdls -name kMDItemContentTypeTree "$SYSTEM_EVENTS_APP"
+  INDIRECT_OBJECT_ID_TYPE=0 # Bundle Identifier
+  INDIRECT_OBJECT_ID=com.apple.systemevents
+  SYS_EVENTS_IDENTIFIER=$(codesign -d -r- "$SYSTEM_EVENTS_APP" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+
+  # Generate codesign request for APP_ID
+  REQ_STR=$(codesign -d -r- "${APP_ID}" 2>&1 | awk -F ' => ' '/designated/{print $2}')
+  echo "$REQ_STR" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/csreq.bin"
+  REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/csreq.bin"  | tr -d '\n')
+
+  # Generate codesign request for INDIRECT_OBJECT_CODE_ID (identifier "com.apple.systemevents" and anchor apple)
+  echo "$SYS_EVENTS_IDENTIFIER" | csreq -r- -b "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin"
+  SYS_EVENTS_REQ_HEX=$(xxd -p "${TCC_CSREQ_TMP_DIR}/indirect-object-csreq.bin" | tr -d '\n')
+  INDIRECT_OBJECT_CODE_ID_CSREQ="X'${SYS_EVENTS_REQ_HEX}'"
+
+  APP_CSREQ="X'${REQ_HEX}'"
+  for INPUT_SERVICE in "${INPUT_SERVICES[@]}"; do
+    sudo sqlite3 "$DATABASE_USER" "REPLACE INTO access VALUES('$INPUT_SERVICE','$APP_ID',1,2,3,1,${APP_CSREQ},NULL,$INDIRECT_OBJECT_ID_TYPE,'$INDIRECT_OBJECT_ID',$INDIRECT_OBJECT_CODE_ID_CSREQ,0,?);"
+  done
+  rm -rf "$TCC_CSREQ_TMP_DIR"
 }
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
@@ -32,28 +117,182 @@ prevent_sudo_timeout() {
   echo "Please enter your sudo password to make changes to your machine"
   sudo -v # Asks for passwords
   ( while true; do sudo -v; sleep 40; done ) &   # update the user's timestamp
-  export sudo_loop_PID=$!
+  export timeout_loop_PID=$!
 }
 
 # Kill sudo timestamp refresh PID and invalidate sudo timestamp
-kill_sudo_loop() {
-  echo "Killing $sudo_loop_PID due to trap"
-  kill -TERM $sudo_loop_PID
+kill_timeout_loop() {
+  echo "Killing $timeout_loop_PID due to trap"
+  kill -TERM $timeout_loop_PID
   sudo -K
 }
-trap kill_sudo_loop EXIT HUP TSTP QUIT SEGV TERM INT ABRT  # trap all common terminate signals
+trap kill_timeout_loop EXIT HUP TSTP QUIT SEGV TERM INT ABRT  # trap all common terminate signals
 trap "exit" INT # Run exit when this script receives Ctrl-C
 
+## Drop-In replacement for prevent_sudo_timeout in CI
+## CI has sudo, but long-running jobs can timeout
+## unless log output is frequent enough
+prevent_ci_log_timeout() {
+  echo "INFO: CI run detected via \$CI=$CI or \$TEST_KITCHEN=$TEST_KITCHEN env vars"
+  echo "INFO: Starting log timeout prevention process..."
+  ( while true; do echo '.'; sleep 40; done ) &   # update STDOUT logs
+  export timeout_loop_PID=$!
+}
 
-SOLOIST_DIR="${HOME}/src/pub/soloist"
+function check_trace_state() {
+  if shopt -op 2>&1 | grep -q xtrace; then
+    trace_was_on=1
+  else
+    trace_was_on=0
+  fi
+}
+
+function init_trace_on() {
+  PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }' ## Debugging prompt (for bash -x || set -x)
+  set -x
+}
+
+function turn_trace_on_if_was_on() {
+  [ $trace_was_on -eq 1 ] && set -x ## Turn trace back on
+}
+
+function turn_trace_off() {
+  set +x ## RVM trace is NOISY!
+}
+
+function check_sprout_locked_ruby_versions() {
+  # Check locked versions
+  sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
+  sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
+  sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
+  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" "${REPO_BASE}/Gemfile.lock" | tail -n 1 | tr -d '[:blank:]')
+}
+
+function rvm_set_compile_opts() {
+  turn_trace_on_if_was_on
+
+  # Disable installing RI docs for speed
+  cat > "${HOME}/.gemrc" <<-EOF
+	install: --no-document
+	update: --no-document
+	EOF
+
+  if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
+    export optflags="-Wno-error=implicit-function-declaration"
+    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
+    # Escape from current Gemfile.lock bundler version restriction for bootstrap
+    # NOTE: This could cause problems in the future, b/c
+    #       we depend on system bundler to write ~/.bundle/config here
+    #       Let's hope they don't break config file API version
+    bash -c 'cd /tmp/ && bundle config build.ffi --enable-system-libffi'
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
+    bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
+  fi
+  turn_trace_off
+}
+
+function brew_install_rvm_libs() {
+  if [[ "$CI" != 'true' ]]; then
+    if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
+      grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
+    fi
+    if [[ "$BREW_INSTALL_NOKOGIRI_LIBS" == "1" ]]; then
+      grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
+      grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
+      grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+    fi
+  fi
+}
+
+function rvm_install_ruby_and_gemset() {
+  check_sprout_locked_ruby_versions
+
+  rvm_set_compile_opts
+
+  rvm install "ruby-${sprout_ruby_version}"
+  rvm use "ruby-${sprout_ruby_version}"
+  rvm gemset create "$sprout_ruby_gemset"
+  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+}
+
+# shellcheck disable=SC1010
+function rvm_install_bundler() {
+  check_sprout_locked_ruby_versions
+
+  # Install bundler + rubygems in RVM path
+  echo "rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}"
+  rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
+
+  # Install same version of bundler as Gemfile.lock
+  echo "rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}"
+  rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
+}
+
+# shellcheck disable=SC1010
+function rvm_debug_gems() {
+  if [ "$trace_was_on" -eq 1 ]; then
+    echo "======= DEBUG ============"
+    type rvm | head -1
+    command -v ruby
+    command -v bundler
+    rvm info
+    echo "GEMS IN SHELL ENV:"
+    gem list
+    echo "GEMS IN ${sprout_ruby_version}@${sprout_ruby_gemset}:"
+    rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+    echo "======= DEBUG ============"
+  fi
+}
+
+if [[ "$SOLOIST_DEBUG" == 'true' ]]; then
+  init_trace_on
+fi
+
+# CI setup
+if [[ "$CI" == 'true' ]]; then
+  init_trace_on
+  SOLOIST_DIR="${GITHUB_WORKSPACE}/.."
+  SPROUT_WRAP_BRANCH="$GITHUB_REF_NAME"
+elif [[ "$TEST_KITCHEN" == '1' ]]; then
+  init_trace_on
+  SOLOIST_DIR="/tmp/kitchen/soloist"
+  SPROUT_WRAP_BRANCH=$(get_git_head_branch)
+fi
+
+use_system_ruby=0
+SOLOISTRC=${SOLOISTRC:-soloistrc}
+SOLOIST_DIR=${SOLOIST_DIR:-"${HOME}/src/pub/soloist"}
 #XCODE_DMG='XCode-4.6.3-4H1503.dmg'
-SPROUT_WRAP_URL='https://github.com/trinitronx/sprout-wrap.git'
-SPROUT_WRAP_BRANCH='spica-local-devbox'
+SPROUT_WRAP_URL='https://github.com/LyraPhase/sprout-wrap.git'
+SPROUT_WRAP_BRANCH=${SPROUT_WRAP_BRANCH:-'master'}
+HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
+USER_AGENT="Chef Bootstrap/$(get_git_head_ref) ($(curl --version | head -n1); $(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')$(uname -r); +https://lyraphase.com)"
+
+if [[ "${BASH_SOURCE[0]}" != '' ]]; then
+  # Running from checked out script
+  REPO_BASE=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
+else
+  # Running via curl | bash (piped)
+  REPO_BASE=${SOLOIST_DIR}/sprout-wrap
+fi
 
 detect_platform_version
 
 # Determine which XCode version to use based on platform version
+# https://developer.apple.com/downloads/index.action
 case $platform_version in
+  12.*)
+          XCODE_DMG='Xcode_13.3.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
+          BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
+  11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
+          BYPASS_APPLE_TCC="1" ;;
+  10.15*) XCODE_DMG='Xcode_12.4.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
+  10.14*) XCODE_DMG='Xcode_11_GM_Seed.xip'; export INSTALL_SDK_HEADERS=1 ; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;;
   10.12*) XCODE_DMG='Xcode_8.1.xip' ;;
   10.11*) XCODE_DMG='Xcode_7.3.1.dmg' ;;
   10.10*) XCODE_DMG='Xcode_6.3.2.dmg' ;;
@@ -66,32 +305,40 @@ errorout() {
   echo -e "\x1b[31;1mERROR:\x1b[0m ${1}"; exit 1
 }
 
-pushd `pwd`
+pushd "$(pwd)"
 
+# TODO: Figure out if Xcodes CLI tool will work?
+#       https://github.com/RobotsAndPencils/Xcodes
 # Bootstrap XCode from dmg
 if [ ! -d "/Applications/Xcode.app" ]; then
   echo "INFO: XCode.app not found. Installing XCode..."
   if [ ! -e "$XCODE_DMG" ]; then
     if [[ "$XCODE_DMG" =~ ^.*\.dmg$ ]]; then
-      curl --fail -L -O "http://lyraphase.com/installers/mac/${XCODE_DMG}" || curl --fail -L -O "http://adcdownload.apple.com/Developer_Tools/${XCODE_DMG%%.xip}/${XCODE_DMG}"
+      curl --fail --user-agent "$USER_AGENT" -L -O "http://lyraphase.com/doc/installers/mac/${XCODE_DMG}" || curl --fail -L -O "http://adcdownload.apple.com/Developer_Tools/${XCODE_DMG%%.xip}/${XCODE_DMG}"
     else
-      curl --fail -L -O "http://lyraphase.com/installers/mac/${XCODE_DMG}" || curl --fail -L -O "http://adcdownload.apple.com/Developer_Tools/${XCODE_DMG%%.dmg}/${XCODE_DMG}"
+      curl --fail --user-agent "$USER_AGENT" -L -O "http://lyraphase.com/doc/installers/mac/${XCODE_DMG}" || curl --fail -L -O "http://adcdownload.apple.com/Developer_Tools/${XCODE_DMG%%.dmg}/${XCODE_DMG}"
     fi
   fi
-    
+
   # Why does Apple have to make everything more difficult?
   if [[ "$XCODE_DMG" =~ ^.*\.xip$ ]]; then
     pkgutil --check-signature $XCODE_DMG
     TMP_DIR=$(mktemp -d /tmp/xcode-installer.XXXXXXXXXX)
-    xar -C ${TMP_DIR}/ -xf $XCODE_DMG
-    pushd $TMP_DIR
-    curl -O https://gist.githubusercontent.com/pudquick/ff412bcb29c9c1fa4b8d/raw/24b25538ea8df8d0634a2a6189aa581ccc6a5b4b/parse_pbzx2.py
-    python parse_pbzx2.py Content
-    xz -d Content.part*.cpio.xz
-    sudo cpio -idm < ./Content.part*.cpio
-    sudo mv ./Xcode.app /Applications/
-    popd
-    [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR/"
+
+    if [[ -x "$(command -v xip)" ]]; then
+      xip -x "${REPO_BASE}/${XCODE_DMG}"
+      sudo mv ./Xcode.app /Applications/
+    else
+      xar -C "${TMP_DIR}/" -xf "$XCODE_DMG"
+      pushd "$TMP_DIR"
+      curl -O https://gist.githubusercontent.com/pudquick/ff412bcb29c9c1fa4b8d/raw/24b25538ea8df8d0634a2a6189aa581ccc6a5b4b/parse_pbzx2.py
+      python parse_pbzx2.py Content
+      xz -d Content.part*.cpio.xz
+      sudo /bin/sh -c 'cat ./Content.part*.cpio' | sudo cpio -idm
+      sudo mv ./Xcode.app /Applications/
+      popd
+    fi
+    [ -d "$TMP_DIR" ] && rm -rf "${TMP_DIR:?}/"
   else
     hdiutil attach "$XCODE_DMG"
     export __CFPREFERENCES_AVOID_DAEMON=1
@@ -108,53 +355,221 @@ fi
 
 # Hack to make sure sudo caches sudo password correctly...
 # And so it stays available for the duration of the Chef run
-prevent_sudo_timeout
-readonly sudo_loop_PID  # Make PID readonly for security ;-)
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
+  set +x
+  prevent_ci_log_timeout
+  set -x
+else
+  prevent_sudo_timeout
+fi
+readonly timeout_loop_PID  # Make PID readonly for security ;-)
 
+# Bypass TCC
+if [[ "$BYPASS_APPLE_TCC" == '1' ]]; then
+  if [[ "$TEST_KITCHEN" == '1' ]]; then
+    bypass_apple_system_tcc '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_user_tcc_system_events '/usr/libexec/sshd-keygen-wrapper'
+    bypass_apple_system_tcc '/usr/bin/osascript'
+    bypass_apple_user_tcc_system_events '/usr/bin/osascript'
+  fi
+fi
 
-curl -Ls https://gist.githubusercontent.com/trinitronx/6217746/raw/d6dfe10a3fcf8397735d5421cc739affbe7d1e3c/xcode-cli-tools.sh | sudo bash
+# Try xcode-select --install first
+if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
+  # Try the AppleScript automation method rather than relying on manual .xip / .dmg download & mirroring
+  # Note: Apple broke automated Xcode installer downloads.  Now requires manual Apple ID sign-in.
+  # Source: https://web.archive.org/web/20211210020829/https://techviewleo.com/install-xcode-command-line-tools-macos/
+  if [ ! -d /Library/Developer/CommandLineTools ]; then
+    xcode-select --install
+    sleep 1
+    osascript <<-EOD
+  	  tell application "System Events"
+  	    tell process "Install Command Line Developer Tools"
+  	      keystroke return
+  	      click button "Agree" of window "License Agreement"
+  	    end tell
+  	  end tell
+EOD
+  else
+    echo "INFO: Found /Library/Developer/CommandLineTools already existing. skipping..."
+  fi
+else
+	# !! This script is no longer supported !!
+	#  Apple broke all direct downloads without logging with an Apple ID first.
+	#   The number of hoops that a script would need to jump through to login,
+	#   store cookies, and download is prohibitive.
+	#   Now we all must manually download and mirror the files for this to work at all :'-(
+	curl -Ls https://gist.githubusercontent.com/trinitronx/6217746/raw/d0c12be945f1984fc7c40501f5235ff4b93e71d6/xcode-cli-tools.sh | sudo bash
+fi
 
 # We need to accept the xcodebuild license agreement before building anything works
 # Evil Apple...
-if [ -x "$(which expect)" ]; then
+if [ -x "$(command -v expect)" ]; then
   echo "INFO: GNU expect found! By using this script, you automatically accept the XCode License agreement found here: http://www.apple.com/legal/sla/docs/xcode.pdf"
   # Git.io short URL to: ./bootstrap-scripts/accept-xcodebuild-license.exp
-  curl -Ls 'https://git.io/viaLD' | expect -
+  #curl -Ls 'https://git.io/viaLD' | sudo expect -
+  sudo expect "${REPO_BASE}/bootstrap-scripts/accept-xcodebuild-license.exp"
 else
-  echo -e "\x1b[31;1mERROR:\x1b[0m Could not find expect utility (is '$(which expect)' executable?)"
+  echo -e "\x1b[31;1mERROR:\x1b[0m Could not find expect utility (is '$(command -v expect)' executable?)"
   echo -e "\x1b[31;1mWarning:\x1b[0m You have not agreed to the Xcode license.\nBuilds will fail! Agree to the license by opening Xcode.app or running:\n
     xcodebuild -license\n\nOR for system-wide acceptance\n
     sudo xcodebuild -license"
   exit 1
 fi
 
-# Checkout sprout-wrap after XCode CLI tools, because we need it for git now
-mkdir -p "$SOLOIST_DIR"; cd "$SOLOIST_DIR/"
 
-echo "INFO: Checking out sprout-wrap..."
-if [ -d sprout-wrap ]; then
-  pushd sprout-wrap && git pull
-else
-  git clone $SPROUT_WRAP_URL
-  pushd sprout-wrap
-  git checkout $SPROUT_WRAP_BRANCH
+if [[ "$INSTALL_SDK_HEADERS" == '1' ]]; then
+  # Reference: https://github.com/Homebrew/homebrew-core/issues/18533#issuecomment-332501316
+  # shellcheck disable=SC2016
+  if ruby_mkmf_output="$(ruby -r mkmf -e 'print $hdrdir + "\n"')" && [ -d "$ruby_mkmf_output" ];
+  then
+     echo "INFO: Ruby header files successfully found!"
+  else
+    # This requires user interaction... but Mojave XCode CLT is broken!
+    # Reference: https://donatstudios.com/MojaveMissingHeaderFiles
+    sudo rm -rf /Library/Developer/CommandLineTools
+    sudo xcode-select --install
+    # shellcheck disable=SC2009
+    xcode_clt_pid=$(ps auxww | grep -i 'Install Command Line Developer Tools' | grep -v grep | awk '{ print $2 }')
+    # wait for non-child PID of CLT installer dialog UI
+    while ps -p "$xcode_clt_pid" >/dev/null ; do sleep 1; done
+
+    sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg  -target /
+  fi
 fi
 
-rvm --version 2>/dev/null
-[ ! -x "$(which gem)" -a "$?" -eq 0 ] || USE_SUDO='sudo'
+if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
+  echo "INFO: CI run detected via \$CI=$CI env var"
+  echo "INFO: NOT checking out git repo"
+  echo "INFO: Running soloist from ${REPO_BASE}/test/fixtures"
+  # Must use pushd to keep dir stack 2 items deep
+  pushd "${REPO_BASE}/test/fixtures"
+else
+  # Checkout sprout-wrap after XCode CLI tools, because we need it for git now
+  mkdir -p "$SOLOIST_DIR"; cd "$SOLOIST_DIR/"
 
-$USE_SUDO gem install bundler
-$USE_SUDO gem update --system
-if ! bundle check 2>&1 >/dev/null; then $USE_SUDO bundle install --without development ; fi
+  echo "INFO: Checking out sprout-wrap..."
+  if [ -d sprout-wrap ]; then
+    pushd sprout-wrap && git pull
+  else
+    git clone "$SPROUT_WRAP_URL"
+    pushd sprout-wrap
+    git checkout "$SPROUT_WRAP_BRANCH"
+  fi
+fi
 
-export rvm_user_install_flag=1
-export rvm_prefix="$HOME"
-export rvm_path="${rvm_prefix}/.rvm"
+# Non-Chef Homebrew install
+check_trace_state
+turn_trace_off
 
+if [ -x "$(command -v brew)" ] && brew --version; then
+  :
+else
+  echo | /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
+fi
+turn_trace_on_if_was_on
+
+if [ "$machine" == "arm64" ]; then
+  export HOMEBREW_PREFIX=/opt/homebrew
+  export PATH="/opt/homebrew/bin:${PATH}"
+else
+  export HOMEBREW_PREFIX=/usr/local/homebrew
+  export PATH="/usr/local/homebrew/bin:${PATH}"
+fi
+
+brew_install_rvm_libs
+# Install Chef Workstation SDK via Brewfile
+[ -x "$(command -v brew)" ] && brew bundle install
+
+if [[ $use_system_ruby == "1" ]]; then
+  # We should never get here unless script has been edited by hand
+  # User probably knows what they're doing but warn anyway
+  echo "WARN: Using macOS system Ruby is not recommended!" >&2
+  echo "WARN: Updating system bundler gem will modify stock macOS system files!" >&2
+  if [[ "$override_use_system_ruby_prompt" != '1' ]]; then
+    # shellcheck disable=SC2162
+    read -p 'Are you sure you want to continue and use macOS System Ruby? [y/N]: ' -d $'\n' use_system_ruby_answer
+    use_system_ruby_answer="$(echo -n "$use_system_ruby_answer" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$use_system_ruby_answer" != 'y' ]]; then
+      errorout "Abort modifying System Ruby! Exiting..."
+    else
+      USE_SUDO='sudo'
+    fi
+  fi
+
+  echo "INFO: Updating system bundler gem!" >&2
+  [ -x "/usr/local/bin/bundle" ] || $USE_SUDO gem install -n /usr/local/bin bundler
+  $USE_SUDO gem update -n /usr/local/bin --system
+
+elif [[ "$CI" != 'true' ]]; then
+  USE_SUDO=''
+  export rvm_user_install_flag=1
+  export rvm_prefix="$HOME"
+  export rvm_path="${rvm_prefix}/.rvm"
+
+  echo "Installing RVM..." >&2
+
+  bash -c "${REPO_BASE}/bootstrap-scripts/bootstrap-rvm.sh $USER"
+
+  # RVM trace is NOISY!
+  check_trace_state
+  turn_trace_off
+
+  if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
+    # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+    export PATH="$PATH:$HOME/.rvm/bin"
+
+    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+  fi
+
+  # Install .ruby-version @ .ruby-gemset
+  rvm_install_ruby_and_gemset
+
+  rvm_install_bundler
+
+  rvm_debug_gems
+
+  turn_trace_on_if_was_on
+
+else
+  # Just update bundler in CI
+  gem update --system
+fi
+
+# We need bundler in vendor path too
+check_sprout_locked_ruby_versions
+if ! bundle list | grep -q "bundler.*${sprout_bundler_ver}"; then
+  bundle exec gem install --default "bundler:${sprout_bundler_ver}"
+fi
+
+
+# TODO: Fix last chicken-egg issues
+echo "WARN: Please set up github SSH / HTTPS credentials for Chef Homebrew recipes to work!"
+
+# Bundle install soloist + gems
+if ! bundle check >/dev/null 2>&1; then
+  bundle config set --local path 'vendor/bundle' ;
+  bundle config set --local without 'development' ;
+  # --path & --without have deprecation warnings... but for now we'll try them
+  bundle install --path vendor/bundle --without development ;
+fi
+
+if [[ -n "$SOLOISTRC" && "$SOLOISTRC" != 'soloistrc' ]]; then
+  echo "INFO: Custom $SOLOISTRC passed: $SOLOISTRC"
+  if [[ -f "$SOLOISTRC" && "$(readlink soloistrc)" != "$SOLOISTRC" ]]; then
+    echo "WARN: default soloistrc file is NOT symlinked to $SOLOISTRC"
+    echo "WARN: Forcing re-link: soloistrc -> $SOLOISTRC"
+    ln -sf "$SOLOISTRC" soloistrc
+  fi
+fi
+
+# Auto-accept Chef license for non-interactive automation
+export CHEF_LICENSE=accept
 # Now we provision with chef, et voilá!
 # Node, it's time you grew up to who you want to be
-soloist || errorout "Soloist provisioning failed!"
+caffeinate -dimsu bundle exec soloist || errorout "Soloist provisioning failed!"
 
+turn_trace_off ## RVM noisy on builtin: popd
 popd; popd
 
 exit

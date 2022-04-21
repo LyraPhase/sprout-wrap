@@ -1,0 +1,24 @@
+# Merge PRs labeled release to master
+
+name: git-flow-automerge
+
+# Controls when the workflow will run
+on:
+  # Trigger on pull request events tagged 'release' only for the develop branch
+  pull_request:
+    branches: [ develop ]
+    types: [ labeled, closed, edited ]
+
+jobs:
+  automerge:
+    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: git-flow-merge-action
+        uses: yanamura/git-flow-merge-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: 'develop'
+          develop_branch: 'develop'
+          main_branch: 'master'
