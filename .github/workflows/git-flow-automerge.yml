@@ -25,11 +25,20 @@ jobs:
           ruby -ne 'version = gsub(/chef\s*\((?<version>.*)\)$/, %q/\k<version>/); \
                     print "::set-output name=chef_version::#{version.chomp}"'
         id: extract_chef_version
+      - name: Set release/chef-version branch name
+        run: |
+          echo '::set-output name=branch::release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}'
+        id: chef_release
+      - uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: "release/chef-v${{ steps.chef_release.outputs.branch }}"
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
-          develop_branch: "release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}"
+          develop_branch: "release/chef-v${{ steps.chef_release.outputs.branch }}"
           main_branch: 'master'
