@@ -34,6 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
+          sha: master
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
