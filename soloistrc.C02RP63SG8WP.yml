@@ -279,6 +279,7 @@ node_attributes:
       # - teamspeak
       ## Commented out until they update to Sublime Text 3
       - sublime-text
+      - sublime-merge
       - meld
       - balenaetcher
 
