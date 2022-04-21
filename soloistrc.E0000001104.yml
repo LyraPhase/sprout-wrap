@@ -230,6 +230,7 @@ node_attributes:
       - gopls
       - delve
       - terraform-docs
+      - tflint
       - mockery
       - node
       - nvm
