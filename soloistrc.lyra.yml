@@ -110,7 +110,6 @@ node_attributes:
         - osx
         - rvm
         - ssh
-        - vagrant
       aliases:
         - ag
         - bundler
@@ -127,6 +126,7 @@ node_attributes:
         - rake
         - ssh
         - tmux
+        - vagrant
     custom_plugins:
       sprout-base:
         - bash_it/custom/disable_ctrl-s_output_control.bash
@@ -205,6 +205,8 @@ node_attributes:
 #      - chromedriver
       - docker-machine
       - docker-machine-nfs
+      - libvirt
+      - qemu
 #      - imagemagick
       - openssl
       - xz
@@ -215,6 +217,8 @@ node_attributes:
       - iperf3
 #      - qt
       - ssh-copy-id
+      - pre-commit
+      - shellcheck
       - tmux
 # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
 # Also fixes Sublime Text "subl" command not working
@@ -257,10 +261,12 @@ node_attributes:
       - coreutils
       - lsusb
     casks:
+      - asana
 # Balena.io (formerly Resin.io) mmc card img writer tool
       - balenaetcher
 # Let the lyraphase_workstation::airfoil recipe do this instead
 #      - airfoil
+#      - loopback ## TODO
       - keyfinder
       - blackhole
       - elektron-overbridge
@@ -268,6 +274,7 @@ node_attributes:
       - ocenaudio
       - streamlabs-obs
       - obs
+      - jamkazam
 #      - ccmenu
 #      - cord
       - firefox
@@ -278,16 +285,20 @@ node_attributes:
       - google-chrome
       - kid3
       - chef-workstation
+      - mixed-in-key
       - musicbrainz-picard
       - netspot
+      - openvpn-connect
 #      - google-hangouts
       - elektron-overbridge
       - logitech-options
+      - wacom-tablet
       - skype
       - steam
       - textmate
       - surge-synthesizer
       - sysex-librarian
+      - waves-central
       - vcv-rack
       - vagrant
       - vagrant-vmware-utility
@@ -337,8 +348,8 @@ node_attributes:
 #        registration_key:
 #    airfoil:
 #      license:
-#        code: 
-#        name: 
+#        code:
+#        name:
   lyraphase_workstation:
     ableton_live:
       managed_versions: all

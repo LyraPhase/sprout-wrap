@@ -12,7 +12,7 @@ end
 
 
 royal_crown = Soloist::RoyalCrown.new(:path => 'soloistrc')
-# For some reason, the init method does not actually initialize the object... 
+# For some reason, the init method does not actually initialize the object...
 # we must reload it after path is set.
 royal_crown =  royal_crown.reload
 config = Soloist::Config.new( royal_crown )
@@ -21,6 +21,10 @@ config = Soloist::Config.new( royal_crown )
 ### config.methods - Object.methods
 ###   => [:as_node_json, :as_solo_rb, :chef_cache_path, :chef_solo, :compiled, :cookbook_paths, :debug?, :log_level, :merge!, :node_json_path, :node_json_path=, :royal_crown, :solo_rb_path, :solo_rb_path=]
 ###
+
+# Set Soloist Config Paths
+config.solo_rb_path = '/tmp/chef-solo.rb'
+config.node_json_path = '/tmp/node.json'
 
 # Write out Chef Solo config
 puts "Writing Persistent /tmp/chef-solo.rb from soloist config"
@@ -32,7 +36,7 @@ end
 #yaml_text  = config.royal_crown.to_yaml
 # Node JSON
 File.open('/tmp/node.json', 'w') do |f|
-  config.as_node_json
+  f.write(config.as_node_json.to_json)
 end
 
 puts "Soloist settings:"
