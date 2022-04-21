@@ -99,6 +99,8 @@ jobs:
         run: |
           sudo mkdir -p /var/chef/cache/
           sudo touch /var/chef/cache/last_software_update
+      - name: Disable Homebrew Analytics
+        run: brew analytics off
       - name: Run bootstrap.sh + soloist with test fixtures
         run: |
           make bootstrap
