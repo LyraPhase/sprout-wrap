@@ -10,10 +10,23 @@ on:
     types: [ labeled, closed, edited ]
 
 jobs:
+  master-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: master
+      - name: Extract master SHA
+        run: echo "::set-output name=sha::$(git rev-parse master)"
+        id: master_branch
+    outputs:
+      sha: ${{ steps.master_branch.outputs.sha }}
   automerge:
     if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
     steps:
+      - name: Debug Master SHA
+        run: echo ${{ needs.master-branch.outputs.sha }}
       - uses: actions/checkout@v3
       - uses: ruby/setup-ruby@v1
         with:
@@ -29,12 +42,12 @@ jobs:
         run: |
           echo '::set-output name=branch::release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}'
         id: chef_release
-      - uses: peterjgrainger/action-create-branch@v2.0.1
+      - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
-          sha: master
+          sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
