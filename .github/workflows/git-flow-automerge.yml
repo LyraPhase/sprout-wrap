@@ -15,11 +15,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6 # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+      - name: Extract Chef Version
+        run: |
+          bundle exec gem list --quiet --local --exact 'chef' | \
+          ruby -ne 'version = gsub(/chef\s*\((?<version>.*)\)$/, %q/\k<version>/); \
+                    print "::set-output name=chef_version::#{version.chomp}"'
+        id: extract_chef_version
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
-          develop_branch: 'master'
+          develop_branch: "release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}"
           main_branch: 'master'
