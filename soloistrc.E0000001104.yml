@@ -227,6 +227,8 @@ node_attributes:
       - xz
       - go
       - gomplate
+      - gopls
+      - delve
       - mockery
       - node
       - nvm
