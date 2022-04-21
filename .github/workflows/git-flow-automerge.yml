@@ -21,7 +21,9 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: git-flow-merge-action
-        uses: yanamura/git-flow-merge-action@v1.2.0
+        uses: yanamura/git-flow-merge-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.extract_branch.outputs.branch }}
+          develop_branch: 'develop'
+          main_branch: 'master'
