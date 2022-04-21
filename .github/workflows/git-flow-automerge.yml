@@ -20,5 +20,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'develop'
-          develop_branch: 'develop'
+          # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
+          develop_branch: 'master'
           main_branch: 'master'
