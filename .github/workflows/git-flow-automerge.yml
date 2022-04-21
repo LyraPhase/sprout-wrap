@@ -33,12 +33,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: "release/chef-v${{ steps.chef_release.outputs.branch }}"
+          branch: ${{ steps.chef_release.outputs.branch }}
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
-          develop_branch: "release/chef-v${{ steps.chef_release.outputs.branch }}"
+          develop_branch: ${{ steps.chef_release.outputs.branch }}
           main_branch: 'master'
