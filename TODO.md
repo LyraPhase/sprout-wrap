@@ -96,6 +96,9 @@ Misc
         softwareupdate --install-rosetta
 
 - Idea: Switch to installing Xcode via [xcodes][10] and [Homebrew formula][11] to avoid the automation headaches
+- Idea: Cookbook / recipe to install `go` tools:
+
+        go install -v github.com/ramya-rao-a/go-outline@latest
 
 [1]: https://github.com/pivotal-sprout/osx
 [2]: https://github.com/pivotal-sprout/sprout-osx-settings
