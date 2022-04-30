@@ -204,6 +204,7 @@ node_attributes:
       - tfenv
       - tgenv
       - terracognita
+      - inframap
       - vault
       - packer
       - blackbox
