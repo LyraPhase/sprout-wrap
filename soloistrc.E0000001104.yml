@@ -229,6 +229,8 @@ node_attributes:
       - go
       - gomplate
       - gopls
+      - gotests
+      - gomodifytags
       - delve
       - staticcheck
       - terraform-docs

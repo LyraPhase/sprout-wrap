@@ -7,27 +7,38 @@ name: ci
       - master
       - main
       - develop
+    paths:
+      - '**/Brewfile**'
+      - 'Cheffile**'
+      - 'Gemfile**'
+      - 'Makefile'
+      - '**.mk'
+      - 'bootstrap-scripts/**'
+      - 'bin/convert_soloistrc_to_brewfile.rb'
+      - 'test/fixtures/soloistrc'
+      - 'test/fixtures/Gemfile**'
+      - 'test/fixtures/Brewfile**'
   push:
     branches:
       - master
       - main
       - develop
+    paths:
+      - '**/Brewfile**'
+      - 'Cheffile**'
+      - 'Gemfile**'
+      - 'Makefile'
+      - '**.mk'
+      - 'bootstrap-scripts/**'
+      - 'bin/convert_soloistrc_to_brewfile.rb'
+      - 'test/fixtures/soloistrc'
+      - 'test/fixtures/Gemfile**'
+      - 'test/fixtures/Brewfile**'
+
 env:
   debug_ci: false
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6 # Not needed with a .ruby-version file
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      - name: Run make test
-        run: |
-          bundle exec make test
   bootstrap:
     runs-on: ${{ matrix.os }}
     strategy:
