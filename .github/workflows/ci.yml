@@ -7,11 +7,34 @@ name: ci
       - master
       - main
       - develop
+    paths:
+      - '**/Brewfile**'
+      - 'Cheffile**'
+      - 'Gemfile**'
+      - 'Makefile'
+      - '**.mk'
+      - 'bootstrap-scripts/**'
+      - 'bin/convert_soloistrc_to_brewfile.rb'
+      - 'test/fixtures/soloistrc'
+      - 'test/fixtures/Gemfile**'
+      - 'test/fixtures/Brewfile**'
   push:
     branches:
       - master
       - main
       - develop
+    paths:
+      - '**/Brewfile**'
+      - 'Cheffile**'
+      - 'Gemfile**'
+      - 'Makefile'
+      - '**.mk'
+      - 'bootstrap-scripts/**'
+      - 'bin/convert_soloistrc_to_brewfile.rb'
+      - 'test/fixtures/soloistrc'
+      - 'test/fixtures/Gemfile**'
+      - 'test/fixtures/Brewfile**'
+
 env:
   debug_ci: false
 
