@@ -101,21 +101,23 @@ Misc
         go install -v github.com/ramya-rao-a/go-outline@latest
         go install -v github.com/josharian/impl@latest
         go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
+        go install -v github.com/haya14busa/goplay/cmd/goplay@latest
 
   - Manually Installed Tools List:
     - [go-outline][12]: Extracts JSON representations for declarations in Go source files.
     - [impl][13]: Go [Interface Code Snippet Generator][14]
     - [gopkgs][15]: Tool to list all available Go packages
+    - [goplay][16]: The [Go Playground][17] client
 
   - Homebrew Installed Tools List:
-    - [gomodifytags][16]: Go tool to modify/update field tags in structs.
-    - [go][17]: Go Language (a.k.a. GoLang)
-    - [delve][18]: Go Debugger
-    - [gopls][19]: Go Language Server providing IDE features via LSP / Language Server Protocol
-    - [gomplate][20]: Go Template renderer
-    - [gotests][21]: Generate tests based `.go` source files' function signatures
-    - [staticcheck][22]: Static analysis Linter for Go
-    - [mockery][23]: Mock code autogenerator for Golang
+    - [gomodifytags][18]: Go tool to modify/update field tags in structs.
+    - [go][19]: Go Language (a.k.a. GoLang)
+    - [delve][20]: Go Debugger
+    - [gopls][21]: Go Language Server providing IDE features via LSP / Language Server Protocol
+    - [gomplate][22]: Go Template renderer
+    - [gotests][23]: Generate tests based `.go` source files' function signatures
+    - [staticcheck][24]: Static analysis Linter for Go
+    - [mockery][25]: Mock code autogenerator for Golang
 
 [1]: https://github.com/pivotal-sprout/osx
 [2]: https://github.com/pivotal-sprout/sprout-osx-settings
@@ -132,11 +134,13 @@ Misc
 [13]: https://github.com/josharian/impl
 [14]: https://levelup.gitconnected.com/implementing-golang-interfaces-like-a-boss-73a0f7757597
 [15]: https://github.com/uudashr/gopkgs
-[16]: https://github.com/fatih/gomodifytags
-[17]: https://go.dev/
-[18]: https://github.com/go-delve/delve
-[19]: https://github.com/golang/tools/tree/master/gopls
-[20]: https://docs.gomplate.ca/
-[21]: https://github.com/cweill/gotests
-[22]: https://staticcheck.io/
-[23]: https://github.com/vektra/mockery
+[16]: https://github.com/haya14busa/goplay
+[17]: https://play.golang.org
+[18]: https://github.com/fatih/gomodifytags
+[19]: https://go.dev/
+[20]: https://github.com/go-delve/delve
+[21]: https://github.com/golang/tools/tree/master/gopls
+[22]: https://docs.gomplate.ca/
+[23]: https://github.com/cweill/gotests
+[24]: https://staticcheck.io/
+[25]: https://github.com/vektra/mockery
