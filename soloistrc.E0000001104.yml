@@ -203,6 +203,8 @@ node_attributes:
       # - terraform ## Conflicts with tfenv version manager
       - tfenv
       - tgenv
+      - terracognita
+      - inframap
       - vault
       - packer
       - blackbox
@@ -228,7 +230,10 @@ node_attributes:
       - go
       - gomplate
       - gopls
+      - gotests
+      - gomodifytags
       - delve
+      - staticcheck
       - terraform-docs
       - tflint
       - mockery
