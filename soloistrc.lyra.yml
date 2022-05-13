@@ -270,6 +270,7 @@ node_attributes:
       - keyfinder
       - blackhole
       - elektron-overbridge
+      - elektron-transfer
       - soundflowerbed
       - ocenaudio
       - streamlabs-obs
