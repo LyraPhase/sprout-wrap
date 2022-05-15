@@ -230,6 +230,7 @@ node_attributes:
 #      - rbenv-binstubs
 #      - rbenv-gem-rehash
       - gist
+      - gh
       - hub
       - git-subrepo
       - mosh
