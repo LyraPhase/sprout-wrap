@@ -274,6 +274,7 @@ node_attributes:
       - elektron-transfer
       - soundflowerbed
       - ocenaudio
+      - elgato-stream-deck
       - streamlabs-obs
       - obs
       - jamkazam
