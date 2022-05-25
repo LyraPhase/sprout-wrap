@@ -1,6 +1,7 @@
 recipes:
 
 # base (required by sprout)
+- lyraphase_workstation::root_bootstrap_ssh_config
 - sprout-base
 - sprout-base::bash_it
 
