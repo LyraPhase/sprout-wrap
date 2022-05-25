@@ -196,7 +196,7 @@ node_attributes:
       - homebrew/homebrew-core
       - trinitronx/pcloud
       - jlhonora/lsusb
-      - caskroom/drivers
+      - homebrew/cask-drivers
       - chef/homebrew-chef
     formulas:
       - bash-completion
