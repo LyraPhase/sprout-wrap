@@ -193,7 +193,6 @@ node_attributes:
         merge.tool: meld
   homebrew:
     taps:
-      - homebrew/versions
       - homebrew/homebrew-core
       - trinitronx/pcloud
       - jlhonora/lsusb
