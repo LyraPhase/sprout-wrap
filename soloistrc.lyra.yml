@@ -89,6 +89,7 @@ recipes:
 - lyraphase_workstation::polyverse_infected_mushroom_i_wish
 - lyraphase_workstation::polyverse_infected_mushroom_manipulator
 - lyraphase_workstation::mixed_in_key
+- lyraphase_workstation::bitfocus_companion
 - lyraphase_workstation::korg_kontrol_editor
 - lyraphase_workstation::sublime_text_settings
 - lyraphase_workstation::nfs_mounts
@@ -193,6 +194,7 @@ node_attributes:
     taps:
       - homebrew/versions
       - homebrew/homebrew-core
+      - trinitronx/pcloud
       - jlhonora/lsusb
       - caskroom/drivers
       - chef/homebrew-chef
@@ -322,6 +324,7 @@ node_attributes:
       - yubico-yubikey-personalization-gui
       - java
 #      - cyberduck
+      - pcloud-drive
       - dropbox
       - zoom
 #      - hex-fiend
