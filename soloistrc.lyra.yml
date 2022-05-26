@@ -205,6 +205,8 @@ node_attributes:
       - grc
 #      - boot2docker
 #      - chromedriver
+      - pyenv
+      - pyenv-virtualenv
       - docker-machine
       - docker-machine-nfs
       - libvirt
