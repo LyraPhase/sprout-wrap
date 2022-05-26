@@ -100,7 +100,7 @@ recipes:
 
 ### Hardware Hacking
 # Driver for USB -> Serial RS232 Adapter
-- lyraphase_workstation::prolific_pl2303_driver
+#- lyraphase_workstation::prolific_pl2303_driver
 
 node_attributes:
   current_user: jcuzella
