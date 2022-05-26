@@ -1,6 +1,7 @@
 recipes:
 
 # base (required by sprout)
+- lyraphase_workstation::root_bootstrap_ssh_config
 - sprout-base
 - sprout-base::bash_it
 
@@ -89,6 +90,7 @@ recipes:
 - lyraphase_workstation::polyverse_infected_mushroom_i_wish
 - lyraphase_workstation::polyverse_infected_mushroom_manipulator
 - lyraphase_workstation::mixed_in_key
+- lyraphase_workstation::bitfocus_companion
 - lyraphase_workstation::korg_kontrol_editor
 - lyraphase_workstation::sublime_text_settings
 - lyraphase_workstation::nfs_mounts
@@ -98,7 +100,7 @@ recipes:
 
 ### Hardware Hacking
 # Driver for USB -> Serial RS232 Adapter
-- lyraphase_workstation::prolific_pl2303_driver
+#- lyraphase_workstation::prolific_pl2303_driver
 
 node_attributes:
   current_user: jcuzella
@@ -191,10 +193,10 @@ node_attributes:
         merge.tool: meld
   homebrew:
     taps:
-      - homebrew/versions
       - homebrew/homebrew-core
+      - trinitronx/pcloud
       - jlhonora/lsusb
-      - caskroom/drivers
+      - homebrew/cask-drivers
       - chef/homebrew-chef
     formulas:
       - bash-completion
@@ -203,6 +205,8 @@ node_attributes:
       - grc
 #      - boot2docker
 #      - chromedriver
+      - pyenv
+      - pyenv-virtualenv
       - docker-machine
       - docker-machine-nfs
       - libvirt
@@ -267,7 +271,7 @@ node_attributes:
       - balenaetcher
 # Let the lyraphase_workstation::airfoil recipe do this instead
 #      - airfoil
-#      - loopback ## TODO
+      - loopback
       - keyfinder
       - blackhole
       - elektron-overbridge
@@ -322,6 +326,7 @@ node_attributes:
       - yubico-yubikey-personalization-gui
       - java
 #      - cyberduck
+      - pcloud-drive
       - dropbox
       - zoom
 #      - hex-fiend
@@ -355,16 +360,9 @@ node_attributes:
 #        name:
   lyraphase_workstation:
     ableton_live:
-      managed_versions: all
+      managed_versions: 10.1.35
       options:
         - EnableMapToSiblings
-#      dmg:
-#        source: http://cdn2-downloads.ableton.com/channels/9.6.1b5/ableton_live_beta_961b5_64.dmg
-#        source: http://www.lyraphase.com/doc/installers/mac/ableton_live_beta_97b9_64.dmg
-#        checksum: eb67ba3a96b415ac3c159d68ff8d7dbfcdecf6d0555739f3897fafa0e5232084
-#        volumes_dir: Ableton Live 9.7 Beta Installer
-#        dmg_name: ableton_live_beta_97b9_64
-#        app: Ableton Live 9.7 Beta
     nfs_mounts:
       - "#/../Volumes/saturn    -fstype=nfs,noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export"
       - "/../Volumes/terabyte    -fstype=nfs,vers=3,nolockd,resvport,hard,bg,intr,rw,tcp,nfc nfs://192.168.1.100:/export/terabyte"
