@@ -45,6 +45,12 @@ jobs:
       matrix:
         os: [macos-11, macos-12]
     steps:
+      - name: DEBUG What is GitHub Actions IP?
+        run: |
+          curl -Lvs ifconfig.co
+      - name: DEBUG the failing 502 URL
+        run: |
+          curl -v 'https://supermarket.getchef.com/api/v1/cookbooks/dmg/versions/4.1.1'
       - name: Check out code
         uses: actions/checkout@v3
       - name: Add --no-document to .gemrc
