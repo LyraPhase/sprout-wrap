@@ -2,6 +2,8 @@ ci:
   autofix_prs: true
   autoupdate_schedule: weekly
   submodules: true
+  skip:
+    - shell-lint # Not installed on pre-commit.ci
 
 exclude: |
     (?x)^(
