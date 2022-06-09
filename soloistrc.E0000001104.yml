@@ -330,6 +330,7 @@ node_attributes:
       - xscope
       - logitech-options
       - wacom-tablet
+      - wacom-inkspace
       - sketch
       - inkscape
       - gpg-suite
