@@ -283,7 +283,6 @@ node_attributes:
       - wemux
       - aws-iam-authenticator
       - awscli
-      - session-manager-plugin
       - awslogs
       - s3cmd
       - gettext
@@ -347,6 +346,7 @@ node_attributes:
       - yubico-yubikey-personalization-gui
       - aws-vault
       - aws-vpn-client
+      - session-manager-plugin
       - cyberduck
       - pcloud-drive
       - box-drive
