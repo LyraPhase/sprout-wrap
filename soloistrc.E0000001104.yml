@@ -283,6 +283,7 @@ node_attributes:
       - wemux
       - aws-iam-authenticator
       - awscli
+      - session-manager-plugin
       - awslogs
       - s3cmd
       - gettext
