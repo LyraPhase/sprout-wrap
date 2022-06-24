@@ -239,6 +239,7 @@ node_attributes:
       - mockery
       - node
       - nvm
+      - jose
       - lua
       - java
       - sbt
