@@ -269,6 +269,7 @@ node_attributes:
     casks:
       - asana
       - backuploupe
+      - superduper
 # Balena.io (formerly Resin.io) mmc card img writer tool
       - balenaetcher
 # Let the lyraphase_workstation::airfoil recipe do this instead
