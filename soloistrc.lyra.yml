@@ -305,7 +305,6 @@ node_attributes:
       - logitech-options
       - wacom-tablet
       - wacom-inkspace
-      - skype
       - steam
       - textmate
       - surge-synthesizer
