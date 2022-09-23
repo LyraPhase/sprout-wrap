@@ -267,6 +267,7 @@ node_attributes:
       # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
       # Also fixes Sublime Text "subl" command not working
       - reattach-to-user-namespace
+      - dos2unix
       - tree
       - socat
       - nmap
