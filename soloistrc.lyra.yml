@@ -289,7 +289,7 @@ node_attributes:
 #      - ccmenu
 #      - cord
       - firefox
-#      - freefilesync
+#      - freefilesync ## TODO! Add Homebrew Cask or Chef Recipe for Donation Edition
 #      - gitx-rowanj
       - garmin-express
       - github
