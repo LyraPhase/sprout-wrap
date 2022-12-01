@@ -43,7 +43,7 @@ jobs:
         run: |
           echo '::set-output name=branch::release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}'
         id: chef_release
-      - uses: peterjgrainger/action-create-branch@v2.2.0
+      - uses: peterjgrainger/action-create-branch@v2.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
