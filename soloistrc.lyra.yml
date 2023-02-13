@@ -78,7 +78,7 @@ recipes:
 
 ### Lyraphase Workstation & Custom
 - lyraphase_workstation::iterm2
-- lyraphase_workstation::iterm2_shell_integration
+#- lyraphase_workstation::iterm2_shell_integration ## JMC 2022-02-13: Disabled due to slow __bp_preexec_invoke_exec() bash-completion issue
 - lyraphase_workstation::airfoil
 - lyraphase_workstation::ableton_live
 - lyraphase_workstation::ableton_live_options
