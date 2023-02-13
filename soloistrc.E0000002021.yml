@@ -81,7 +81,7 @@ recipes:
   # - lyraphase_workstation::bash4
   - lyraphase_workstation::bash_it_custom_plugins
   - lyraphase_workstation::iterm2
-  - lyraphase_workstation::iterm2_shell_integration
+  # - lyraphase_workstation::iterm2_shell_integration ## JMC 2022-02-13: Disabled due to slow __bp_preexec_invoke_exec() bash-completion issue
 
 node_attributes:
   bash_it:
