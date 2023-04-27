@@ -16,6 +16,8 @@ class Kitchen::Transport::Ssh::Connection
 end
 %>
 ---
+# TODO: Investigate vagrant-libvirt Docker image as possible solution for dependency hell
+#       https://github.com/electrofelix/vagrant-libvirt/blob/main/docs/installation.markdown
 driver:
   name: vagrant
   provider: libvirt
@@ -30,6 +32,12 @@ driver:
   #       https://github.com/vagrant-libvirt/vagrant-libvirt/search?q=mount_9p_shared_folder
   # NOTE: For qemu+ssh remote libvirt VM, create a fake directory matching hostpath on the host running vagrant
   #       In this use case, both hostpath & guestpath live on the same remote libvirt + qemu hypervisor host & VM (guest)
+  # TODO: Update vagrant-libvirt to latest (>= 0.11.1) for 9p fixes
+  # TODO: Replace :owner with :access due to option being renamed / deprecated
+  #       https://github.com/vagrant-libvirt/vagrant-libvirt/pull/1571/files
+  # NOTE: The 9p synced folder option :owner is better named as :access, which is
+  #       documented by 9p and less likely to cause confusion on the expected
+  #       behaviour as it does not control the owner of the files.
   # - ["/opt/export/terabyte", "/System/Volumes/Data/terabyte", "hostpath: '/export/terabyte', guestpath: '/System/Volumes/Data/terabyte', disabled: false, type: '9p', mount: false, accessmode: 'squash', owner:'1000'"]
   # - ["/export/terabyte", "/System/Volumes/Data/terabyte", "disabled: false, type: 'nfs', nfs_export: false, bsd__nfs_options: '-fstype=nfs,nolockd,resvport,hard,bg,intr,rw,tcp,nfc'"]
 #    ssh_gateway_username: trinitronx
