@@ -202,6 +202,7 @@ node_attributes:
       - bash-completion
 #      - ctags-exuberant
       - ag
+      - exa
       - grc
       - gptfdisk
 #      - boot2docker
