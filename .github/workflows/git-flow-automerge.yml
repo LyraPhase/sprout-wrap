@@ -19,6 +19,11 @@ jobs:
       - name: Extract master SHA
         run: echo "::set-output name=sha::$(git rev-parse master)"
         id: master_branch
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq '.'
       - name: Check triggering user permissions
         id: check_user_permissions
         uses: actions-cool/check-user-permission@v2.2.0
