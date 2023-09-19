@@ -19,10 +19,18 @@ jobs:
       - name: Extract master SHA
         run: echo "::set-output name=sha::$(git rev-parse master)"
         id: master_branch
+      - name: Check triggering user permissions
+        id: check_user_permissions
+        uses: actions-cool/check-user-permission@v2.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          username: github.triggering_actor
+          require: write
     outputs:
       sha: ${{ steps.master_branch.outputs.sha }}
+      authorized: ${{ steps.check_user_permissions.outputs.require-result }}
   automerge:
-    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+    if: needs.master-branch.outputs.authorized == true && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
     needs: master-branch
     steps:
