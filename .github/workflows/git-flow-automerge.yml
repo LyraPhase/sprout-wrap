@@ -29,7 +29,7 @@ jobs:
         uses: actions-cool/check-user-permission@v2.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          username: github.triggering_actor
+          username: ${{ github.triggering_actor }}
           require: write
     outputs:
       sha: ${{ steps.master_branch.outputs.sha }}
