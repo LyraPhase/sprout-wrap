@@ -26,6 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: master-branch
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq '.'
       - name: Debug Master SHA
         run: echo ${{ needs.master-branch.outputs.sha }}
       - uses: actions/checkout@v3
