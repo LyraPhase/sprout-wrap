@@ -63,14 +63,14 @@ jobs:
         id: chef_release
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
           develop_branch: ${{ steps.chef_release.outputs.branch }}
