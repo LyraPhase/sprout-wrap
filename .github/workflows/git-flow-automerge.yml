@@ -19,10 +19,23 @@ jobs:
       - name: Extract master SHA
         run: echo "::set-output name=sha::$(git rev-parse master)"
         id: master_branch
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq '.'
+      - name: Check triggering user permissions
+        id: check_user_permissions
+        uses: actions-cool/check-user-permission@v2.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.triggering_actor }}
+          require: write
     outputs:
       sha: ${{ steps.master_branch.outputs.sha }}
+      authorized: ${{ steps.check_user_permissions.outputs.require-result }}
   automerge:
-    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+    if: needs.master-branch.outputs.authorized == true && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
     needs: master-branch
     steps:
@@ -50,14 +63,14 @@ jobs:
         id: chef_release
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
           develop_branch: ${{ steps.chef_release.outputs.branch }}
