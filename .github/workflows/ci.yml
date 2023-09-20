@@ -52,7 +52,7 @@ jobs:
         run: |
           curl -v 'https://supermarket.getchef.com/api/v1/cookbooks/dmg/versions/4.1.1'
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Add --no-document to .gemrc
         run: |
           tee -a $HOME/.gemrc <<EOGEMRC
