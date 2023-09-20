@@ -50,6 +50,11 @@ jobs:
         run: echo DEBUG AUTHZ = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' }}
       - name: Debug FULL Boolean
         run: echo DEBUG BOOLEAN = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release') }}
+      - name: Debug Boolean Parts
+        run: |
+          echo DEBUG github.event.pull_request.merged == true  = ${{ github.event.pull_request.merged == true }}
+          echo DEBUG github.event.pull_request.labels.*.name contains? 'release' = ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+          echo DEBUG github.event.label.name == 'release' = ${{ github.event.label.name == 'release' }}
   automerge:
     if: format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
