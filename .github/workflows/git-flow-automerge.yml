@@ -49,7 +49,7 @@ jobs:
       - name: Debug Authorized cast to String, then boolean check ...format('{0}', needs.master-branch.outputs.authorized) == 'true'
         run: echo DEBUG AUTHZ = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' }}
       - name: Debug FULL Boolean
-        run: echo DEBUG BOOLEAN = ${{ needs.master-branch.outputs.authorized == true && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release') }}
+        run: echo DEBUG BOOLEAN = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release') }}
   automerge:
     if: format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
