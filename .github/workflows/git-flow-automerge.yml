@@ -51,7 +51,7 @@ jobs:
       - name: Debug FULL Boolean
         run: echo DEBUG BOOLEAN = ${{ needs.master-branch.outputs.authorized == true && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release') }}
   automerge:
-    if: needs.master-branch.outputs.authorized == true && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+    if: format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
     runs-on: ubuntu-latest
     needs: master-branch
     steps:
