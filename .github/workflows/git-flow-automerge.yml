@@ -19,13 +19,47 @@ jobs:
       - name: Extract master SHA
         run: echo "::set-output name=sha::$(git rev-parse master)"
         id: master_branch
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq '.'
+      - name: Check triggering user permissions
+        id: check_user_permissions
+        uses: actions-cool/check-user-permission@v2.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.triggering_actor }}
+          require: write
     outputs:
       sha: ${{ steps.master_branch.outputs.sha }}
-  automerge:
-    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+      authorized: ${{ steps.check_user_permissions.outputs.require-result }}
+  debug-automerge:
     runs-on: ubuntu-latest
     needs: master-branch
     steps:
+      - name: Debug needs.master-branch.outputs.authorized
+        run: echo ${{ needs.master-branch.outputs.authorized }}
+      - name: Debug Authorized == true
+        run: echo DEBUG AUTHZ = ${{ needs.master-branch.outputs.authorized == true }}
+      - name: Debug Authorized fromJson
+        run: echo DEBUG AUTHZ = ${{ fromJSON(needs.master-branch.outputs.authorized) }}
+      - name: Debug Authorized fromJson to Boolean ... fromJSON(needs.master-branch.outputs.authorized) == true
+        run: echo DEBUG AUTHZ = ${{ fromJSON(needs.master-branch.outputs.authorized) == true }}
+      - name: Debug Authorized cast to String, then boolean check ...format('{0}', needs.master-branch.outputs.authorized) == 'true'
+        run: echo DEBUG AUTHZ = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' }}
+      - name: Debug FULL Boolean
+        run: echo DEBUG BOOLEAN = ${{ format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release') }}
+  automerge:
+    if: format('{0}', needs.master-branch.outputs.authorized) == 'true' && github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || github.event.label.name == 'release')
+    runs-on: ubuntu-latest
+    needs: master-branch
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq '.'
       - name: Debug Master SHA
         run: echo ${{ needs.master-branch.outputs.sha }}
       - uses: actions/checkout@v3
@@ -45,14 +79,14 @@ jobs:
         id: chef_release
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
         uses: yanamura/git-flow-merge-action@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'
           # Can't turn off merging branch into both: develop_branch & main_branch... so hack it to just do master
           develop_branch: ${{ steps.chef_release.outputs.branch }}
