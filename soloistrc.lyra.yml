@@ -281,6 +281,7 @@ node_attributes:
       - blackhole
       - elektron-overbridge
       - elektron-transfer
+      - paulxstretch
       - soundflowerbed
       - ocenaudio
       - elgato-stream-deck
@@ -302,7 +303,6 @@ node_attributes:
       - netspot
       - openvpn-connect
 #      - google-hangouts
-      - elektron-overbridge
       - logitech-options
       - wacom-tablet
       - wacom-inkspace
