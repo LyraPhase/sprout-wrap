@@ -140,6 +140,7 @@ node_attributes:
       - lsusb
     casks:
       - bpm
+      - paulxstretch
 
   workspace_directory: src
   vim_alias_vi_to_minimal_vim: false
