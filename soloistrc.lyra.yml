@@ -292,7 +292,7 @@ node_attributes:
       - audio-hijack
       - loopback
       - keyfinder
-      - blackhole
+      - blackhole-16ch
       - elektron-overbridge
       - elektron-transfer
       - paulxstretch
