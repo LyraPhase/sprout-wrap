@@ -381,7 +381,10 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
   # Source: https://web.archive.org/web/20211210020829/https://techviewleo.com/install-xcode-command-line-tools-macos/
   if [ ! -d /Library/Developer/CommandLineTools ]; then
     xcode-select --install
-    sleep 1
+    # Wait for CLT Installer App starts & grab PID
+    while ! clt_pid=$(pgrep -f 'Install Command Line Developer Tools.app' 2>/dev/null) ; do
+      sleep 1
+    done
     osascript <<-EOD
   	  tell application "System Events"
   	    tell process "Install Command Line Developer Tools"
@@ -390,6 +393,9 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
   	    end tell
   	  end tell
 EOD
+    # Wait for CLT to be fully installed before continuing
+    # wait for non-child PID (Darwin)
+    lsof -p  $clt_pid +r 1 &>/dev/null
   else
     echo "INFO: Found /Library/Developer/CommandLineTools already existing. skipping..."
   fi
