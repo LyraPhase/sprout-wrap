@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "davidanson.vscode-markdownlint",
+    "elagil.pre-commit-helper",
+    "cschleiden.vscode-github-actions"
+  ]
+}

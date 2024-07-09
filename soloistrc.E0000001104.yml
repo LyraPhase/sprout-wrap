@@ -370,6 +370,7 @@ node_attributes:
   vim_alias_vi_to_minimal_vim: false
   versions:
     rvm: 1.26.11
+    bash_it: master
   rvm:
     user_installs:
       - user: jcuzella
