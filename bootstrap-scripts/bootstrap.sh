@@ -227,7 +227,7 @@ function rvm_install_ruby_and_gemset() {
 
   rvm_set_compile_opts
 
-  rvm install "ruby-${sprout_ruby_version}"
+  rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
   rvm use "ruby-${sprout_ruby_version}"
   rvm gemset create "$sprout_ruby_gemset"
   rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
