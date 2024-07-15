@@ -562,8 +562,8 @@ if [ "$machine" == "arm64" ]; then
   export HOMEBREW_PREFIX=/opt/homebrew
   export PATH="/opt/homebrew/bin:${PATH}"
 else
-  export HOMEBREW_PREFIX=/usr/local/homebrew
-  export PATH="/usr/local/homebrew/bin:${PATH}"
+  export HOMEBREW_PREFIX=/usr/local
+  export PATH="/usr/local/bin:${PATH}"
 fi
 
 brew_install_rvm_libs
