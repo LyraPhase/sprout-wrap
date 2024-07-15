@@ -170,6 +170,7 @@ function check_sprout_locked_ruby_versions() {
 
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
+  local opt_dir
 
   # Disable installing RI docs for speed
   cat > "${HOME}/.gemrc" <<-EOF
@@ -198,14 +199,29 @@ function rvm_set_compile_opts() {
 
   if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" && "$machine" == "arm64" ]]; then
     bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
-  elif [[ "$RVM_COMPILE_OPTS_LIBXSLT" == "1" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    bash -c "cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
+  elif [[ "$RVM_COMPILE_OPTS_NOKOGIRI_DEPS" == "1" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libxml2/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/zlib/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    local nokogiri_dep_configure_flags=(
+      "--with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
+      "--with-iconv-dir=$(brew --prefix libiconv )"
+      "--with-xml2-dir=$(pkg-config --variable=prefix libxml-2.0 )"
+      "--with-zlib-dir=$(pkg-config --variable=prefix zlib )"
+    )
+    # Run in forked subshell to avoid sprout-wrap's project Gemfile.lock context
+    (
+      cd /tmp/ && bundle config build.nokogiri --platform=ruby -- "${nokogiri_dep_configure_flags[@]}"
+    )
   fi
 
   if [[ "$RVM_COMPILE_OPTS_READLINE" ]]; then
     export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
+    opt_dir="$(pkg-config --variable=prefix readline):${opt_dir}"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_NCURSES" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/ncurses/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-ncurses-dir=$(pkg-config --variable=prefix ncurses)"
   fi
 
   if [[ "$RVM_COMPILE_OPTS_LIBYAML" ]]; then
@@ -213,16 +229,48 @@ function rvm_set_compile_opts() {
     # Note: The pkg-config .pc file is named: yaml-0.1.pc
     # This may be a Homebrew packaging error, so if it changes, we could switch to using: brew --prefix libyaml
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
+    opt_dir="$(pkg-config --variable=prefix yaml-0.1):${opt_dir}"
+  fi
+  # Optional Ruby Std-lib dependency
+  # See: https://ruby-doc.org/stdlib-1.9.3/libdoc/gdbm/rdoc/GDBM.html
+  if [[ "$RVM_COMPILE_OPTS_GDBM" ]]; then
+    opt_dir="$(brew --prefix gdbm):${opt_dir}"
+  fi
+
+  if [ -n "$opt_dir" ]; then
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-opt-dir=${opt_dir}"
   fi
   turn_trace_off
 }
 
 function brew_install_rvm_libs() {
+  # Refer to Ruby dependency list from ruby-install to keep this updated
+  # https://github.com/postmodern/ruby-install/blob/master/share/ruby-install/ruby/dependencies.txt#L5
+  # TODO: xz automake bison readline libyaml gdbm libffi
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
   fi
-  if [[ "$BREW_INSTALL_OPENSSL" == "1" ]]; then
+  # Note: Locked version due to CVE-2024-3094
+  if [[ "$BREW_INSTALL_XZ" == "1" ]]; then
+    grep -q 'xz@5.4.6' Brewfile || echo "brew 'xz@5.4.6'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_BISON" == "1" ]]; then
+    grep -q 'bison' Brewfile || echo "brew 'bison'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_GDBM" == "1" ]]; then
+    grep -q 'gdbm' Brewfile || echo "brew 'gdbm'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_OPENSSL3" == "1" ]]; then
     grep -q 'openssl@3' Brewfile || echo "brew 'openssl@3'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_READLINE" == "1" ]]; then
+    grep -q 'readline' Brewfile || echo "brew 'readline'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_NCURSES" == "1" ]]; then
+    grep -q 'ncurses' Brewfile || echo "brew 'ncurses'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_LIBYAML" == "1" ]]; then
+    grep -q 'libyaml' Brewfile || echo "brew 'libyaml'" >> Brewfile
   fi
   if [[ "$CI" != 'true' ]]; then
     if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
@@ -232,6 +280,7 @@ function brew_install_rvm_libs() {
       grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
       grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
       grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+      grep -q 'zlib' Brewfile || echo "brew 'zlib'" >> Brewfile
     fi
   fi
 }
@@ -315,8 +364,12 @@ detect_platform_version
 case $platform_version in
   12.*)
           XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1; 
-          BREW_INSTALL_OPENSSL=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ; RVM_ENABLE_YJIT=1 ;
-          BREW_INSTALL_READLINE=1; RVM_COMPILE_OPTS_READLINE=1 ; BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
+          BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ; RVM_ENABLE_YJIT=1 ;
+          BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
+          BREW_INSTALL_NCURSES=1 ; RVM_COMPILE_OPTS_NCURSES=1 ;
+          BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
+          BREW_INSTALL_XZ=1 ; BREW_INSTALL_GDBM=1 ;
+          RVM_COMPILE_OPTS_NOKOGIRI_DEPS=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
           BYPASS_APPLE_TCC="1" ;;
