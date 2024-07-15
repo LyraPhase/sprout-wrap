@@ -9,7 +9,7 @@
 #     ./bootstrap.sh
 #
 # http://github.com/LyraPhase/sprout-wrap
-# Copyright (C) © 🄯  2013-2021 James Cuzella
+# Copyright (C) © 🄯  2013-2024 James Cuzella
 # This script may be freely distributed under the MIT license.
 
 ## Figure out OSX version (source: https://www.opscode.com/chef/install.sh)
