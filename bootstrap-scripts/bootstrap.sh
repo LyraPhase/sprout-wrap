@@ -299,15 +299,30 @@ function brew_install_rvm_libs() {
   fi
 }
 
+# Use rvm as a function within each subshell
+# This is necessary to do per-subshell because it overrides built-in commands
+# like `cd`, and the rvm __zsh_like_cd() function triggers our traps via EXIT
+function source_rvm() {
+  if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
+    # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+    export PATH="$PATH:$HOME/.rvm/bin"
+
+    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+  fi
+}
+
 function rvm_install_ruby_and_gemset() {
   check_sprout_locked_ruby_versions
 
   rvm_set_compile_opts
-
-  rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
-  rvm use "ruby-${sprout_ruby_version}"
-  rvm gemset create "$sprout_ruby_gemset"
-  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  # N.B.: Use a subshell for rvm functions, so that our kill_timeout_loop is not inherited
+  (
+    source_rvm
+    rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
+    rvm use "ruby-${sprout_ruby_version}"
+    rvm gemset create "$sprout_ruby_gemset"
+    rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  )
 }
 
 # shellcheck disable=SC1010
@@ -316,11 +331,17 @@ function rvm_install_bundler() {
 
   # Install bundler + rubygems in RVM path
   echo "rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}"
-  rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
+  (
+    source_rvm
+    rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
+  )
 
   # Install same version of bundler as Gemfile.lock
   echo "rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}"
-  rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
+  (
+    source_rvm
+    rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
+  )
 }
 
 # shellcheck disable=SC1010
@@ -330,11 +351,17 @@ function rvm_debug_gems() {
     type rvm | head -1
     command -v ruby
     command -v bundler
-    rvm info
+    (
+      source_rvm
+      rvm info
+    )
     echo "GEMS IN SHELL ENV:"
     gem list
     echo "GEMS IN ${sprout_ruby_version}@${sprout_ruby_gemset}:"
-    rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+    (
+      source_rvm
+      rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+    )
     echo "======= DEBUG ============"
   fi
 }
@@ -617,13 +644,6 @@ elif [[ "$CI" != 'true' ]]; then
   # RVM trace is NOISY!
   check_trace_state
   turn_trace_off
-
-  if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
-    # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-    export PATH="$PATH:$HOME/.rvm/bin"
-
-    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-  fi
 
   # Install .ruby-version @ .ruby-gemset
   rvm_install_ruby_and_gemset
