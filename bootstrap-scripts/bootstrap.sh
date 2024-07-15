@@ -232,6 +232,11 @@ function rvm_set_compile_opts() {
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
     opt_dir="$(pkg-config --variable=prefix yaml-0.1):${opt_dir}"
   fi
+  if [[ "$RVM_COMPILE_OPTS_LIBKSBA" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libksba/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    # Note: This pkg-config .pc file is named: ksba.pc
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libksba-dir=$(pkg-config --variable=prefix ksba)"
+  fi
   # Optional Ruby Std-lib dependency
   # See: https://ruby-doc.org/stdlib-1.9.3/libdoc/gdbm/rdoc/GDBM.html
   if [[ "$RVM_COMPILE_OPTS_GDBM" ]]; then
@@ -273,6 +278,9 @@ function brew_install_rvm_libs() {
   fi
   if [[ "$BREW_INSTALL_LIBYAML" == "1" ]]; then
     grep -q 'libyaml' Brewfile || echo "brew 'libyaml'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_LIBKSBA" == "1" ]]; then
+    grep -q 'libksba' Brewfile || echo "brew 'libksba'" >> Brewfile
   fi
   if [[ "$CI" != 'true' ]]; then
     if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
@@ -370,6 +378,7 @@ case $platform_version in
           BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
           BREW_INSTALL_NCURSES=1 ; RVM_COMPILE_OPTS_NCURSES=1 ;
           BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
+          BREW_INSTALL_LIBKSBA=1 ; RVM_COMPILE_OPTS_LIBKSBA=1 ;
           BREW_INSTALL_XZ=1 ; BREW_INSTALL_GDBM=1 ;
           RVM_COMPILE_OPTS_NOKOGIRI_DEPS=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
