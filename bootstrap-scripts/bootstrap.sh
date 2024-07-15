@@ -179,7 +179,7 @@ function rvm_set_compile_opts() {
 	EOF
 
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --reconfigure --enable-yjit"
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
   fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
@@ -244,6 +244,10 @@ function rvm_set_compile_opts() {
 
   if [ -n "$opt_dir" ]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-opt-dir=${opt_dir}"
+  fi
+
+  if [ -n "$CONFIGURE_ARGS" ]; then
+    export CONFIGURE_ARGS=" -C ${CONFIGURE_ARGS}"
   fi
   turn_trace_off
 }
