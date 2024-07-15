@@ -247,13 +247,14 @@ function rvm_set_compile_opts() {
 function brew_install_rvm_libs() {
   # Refer to Ruby dependency list from ruby-install to keep this updated
   # https://github.com/postmodern/ruby-install/blob/master/share/ruby-install/ruby/dependencies.txt#L5
-  # TODO: xz automake bison readline libyaml gdbm libffi
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
   fi
-  # Note: Locked version due to CVE-2024-3094
+  # Note: Beware of CVE-2024-3094
+  # Cannot lock version due to https://github.com/Homebrew/homebrew-bundle/issues/547#issuecomment-525443604
+  # So, we must rely on the Homebrew community to not push the new versions until it's been vetted
   if [[ "$BREW_INSTALL_XZ" == "1" ]]; then
-    grep -q 'xz@5.4.6' Brewfile || echo "brew 'xz@5.4.6'" >> Brewfile
+    grep -q 'xz' Brewfile || echo "brew 'xz'" >> Brewfile
   fi
   if [[ "$BREW_INSTALL_BISON" == "1" ]]; then
     grep -q 'bison' Brewfile || echo "brew 'bison'" >> Brewfile
