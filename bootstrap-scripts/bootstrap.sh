@@ -177,6 +177,9 @@ function rvm_set_compile_opts() {
 	update: --no-document
 	EOF
 
+  if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --reconfigure --enable-yjit"
+  fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
   fi
@@ -200,6 +203,9 @@ function rvm_set_compile_opts() {
 }
 
 function brew_install_rvm_libs() {
+  if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
+    grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
+  fi
   if [[ "$BREW_INSTALL_OPENSSL" == "1" ]]; then
     grep -q 'openssl@3' Brewfile || echo "brew 'openssl@3'" >> Brewfile
   fi
@@ -293,7 +299,8 @@ detect_platform_version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
   12.*)
-          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 BREW_INSTALL_OPENSSL=1 RVM_COMPILE_OPTS_OPENSSL3=1 ;
+          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1; 
+          BREW_INSTALL_OPENSSL=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ; RVM_ENABLE_YJIT=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
           BYPASS_APPLE_TCC="1" ;;
