@@ -189,16 +189,31 @@ function rvm_set_compile_opts() {
     export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
     export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
     export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig:${PKG_CONFIG_PATH}"
     # Escape from current Gemfile.lock bundler version restriction for bootstrap
     # NOTE: This could cause problems in the future, b/c
     #       we depend on system bundler to write ~/.bundle/config here
     #       Let's hope they don't break config file API version
-    bash -c 'cd /tmp/ && bundle config build.ffi --enable-system-libffi'
+    bash -c "cd /tmp/ && bundle config build.ffi -- --with-libffi-dir=$(pkg-config --variable=prefix libffi )"
   fi
 
-  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
+  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" && "$machine" == "arm64" ]]; then
     bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
+  elif [[ "$RVM_COMPILE_OPTS_LIBXSLT" == "1" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    bash -c "cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_READLINE" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_LIBYAML" ]]; then
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libyaml/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    # Note: The pkg-config .pc file is named: yaml-0.1.pc
+    # This may be a Homebrew packaging error, so if it changes, we could switch to using: brew --prefix libyaml
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
   fi
   turn_trace_off
 }
@@ -302,6 +317,7 @@ case $platform_version in
   12.*)
           XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1; 
           BREW_INSTALL_OPENSSL=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ; RVM_ENABLE_YJIT=1 ;
+          BREW_INSTALL_READLINE=1; RVM_COMPILE_OPTS_READLINE=1 ; BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
           BYPASS_APPLE_TCC="1" ;;
