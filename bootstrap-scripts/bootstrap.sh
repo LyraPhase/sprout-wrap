@@ -180,6 +180,7 @@ function rvm_set_compile_opts() {
 
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
+    rustup default stable-${machine}-apple-darwin
   fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
@@ -261,6 +262,7 @@ function brew_install_rvm_libs() {
   # https://github.com/postmodern/ruby-install/blob/master/share/ruby-install/ruby/dependencies.txt#L5
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
+    grep -q 'rustup-init' Brewfile || echo "brew 'rustup-init'" >> Brewfile
   fi
   # Note: Beware of CVE-2024-3094
   # Cannot lock version due to https://github.com/Homebrew/homebrew-bundle/issues/547#issuecomment-525443604
