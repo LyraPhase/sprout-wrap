@@ -417,7 +417,7 @@ detect_platform_version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
   12.*)
-          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1; 
+          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1;
           BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ;
           RVM_ENABLE_YJIT=1 ; RVM_WITH_JEMALLOC=1 ;
           BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
