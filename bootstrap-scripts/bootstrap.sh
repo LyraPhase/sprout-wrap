@@ -182,6 +182,11 @@ function rvm_set_compile_opts() {
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
     rustup default stable-${machine}-apple-darwin
   fi
+  if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
+  fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
     export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
   fi
@@ -263,6 +268,9 @@ function brew_install_rvm_libs() {
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
     grep -q 'rustup-init' Brewfile || echo "brew 'rustup-init'" >> Brewfile
+  fi
+  if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
+    grep -q 'jemalloc' Brewfile || echo "brew 'jemalloc'" >> Brewfile
   fi
   # Note: Beware of CVE-2024-3094
   # Cannot lock version due to https://github.com/Homebrew/homebrew-bundle/issues/547#issuecomment-525443604
@@ -410,7 +418,8 @@ detect_platform_version
 case $platform_version in
   12.*)
           XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1; 
-          BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ; RVM_ENABLE_YJIT=1 ;
+          BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ;
+          RVM_ENABLE_YJIT=1 ; RVM_WITH_JEMALLOC=1 ;
           BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
           BREW_INSTALL_NCURSES=1 ; RVM_COMPILE_OPTS_NCURSES=1 ;
           BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
