@@ -171,7 +171,7 @@ function check_sprout_locked_ruby_versions() {
 
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
-  local opt_dir
+  local opt_dir rvm_patch_args
 
   # Disable installing RI docs for speed
   cat > "${HOME}/.gemrc" <<-EOF
@@ -180,23 +180,23 @@ function rvm_set_compile_opts() {
 	EOF
 
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
     rustup default stable-${machine}-apple-darwin
   fi
   if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
   fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
-    export optflags="-Wno-error=implicit-function-declaration"
-    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    optflags="-Wno-error=implicit-function-declaration"
+    LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig:${PKG_CONFIG_PATH}"
     # Escape from current Gemfile.lock bundler version restriction for bootstrap
     # NOTE: This could cause problems in the future, b/c
     #       we depend on system bundler to write ~/.bundle/config here
@@ -207,7 +207,7 @@ function rvm_set_compile_opts() {
   if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" && "$machine" == "arm64" ]]; then
     bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
   elif [[ "$RVM_COMPILE_OPTS_NOKOGIRI_DEPS" == "1" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libxml2/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/zlib/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libxml2/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/zlib/lib/pkgconfig:${PKG_CONFIG_PATH}"
     local nokogiri_dep_configure_flags=(
       "--with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
       "--with-iconv-dir=$(brew --prefix libiconv )"
@@ -221,27 +221,27 @@ function rvm_set_compile_opts() {
   fi
 
   if [[ "$RVM_COMPILE_OPTS_READLINE" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
     opt_dir="$(pkg-config --variable=prefix readline):${opt_dir}"
   fi
 
   if [[ "$RVM_COMPILE_OPTS_NCURSES" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/ncurses/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-ncurses-dir=$(pkg-config --variable=prefix ncurses)"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/ncurses/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-ncurses-dir=$(pkg-config --variable=prefix ncurses)"
   fi
 
   if [[ "$RVM_COMPILE_OPTS_LIBYAML" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libyaml/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libyaml/lib/pkgconfig:${PKG_CONFIG_PATH}"
     # Note: The pkg-config .pc file is named: yaml-0.1.pc
     # This may be a Homebrew packaging error, so if it changes, we could switch to using: brew --prefix libyaml
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
     opt_dir="$(pkg-config --variable=prefix yaml-0.1):${opt_dir}"
   fi
   if [[ "$RVM_COMPILE_OPTS_LIBKSBA" ]]; then
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libksba/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libksba/lib/pkgconfig:${PKG_CONFIG_PATH}"
     # Note: This pkg-config .pc file is named: ksba.pc
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libksba-dir=$(pkg-config --variable=prefix ksba)"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libksba-dir=$(pkg-config --variable=prefix ksba)"
   fi
   # Optional Ruby Std-lib dependency
   # See: https://ruby-doc.org/stdlib-1.9.3/libdoc/gdbm/rdoc/GDBM.html
@@ -250,16 +250,21 @@ function rvm_set_compile_opts() {
   fi
 
   if [[ "$RVM_COMPILE_OPTS_PATCH_AUTOCONF_FUNC_NAME_STRING" == "1" ]]; then
-    export RVM_PATCH_ARGS="--patch ${REPO_BASE}/bootstrap-scripts/patches/ruby-3.1.2-configure.ac.patch"
+    rvm_patch_args="--patch ${REPO_BASE}/bootstrap-scripts/patches/ruby-3.1.2-configure.ac.patch"
   fi
 
   if [ -n "$opt_dir" ]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-opt-dir=${opt_dir}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-opt-dir=${opt_dir}"
   fi
 
   if [ -n "$CONFIGURE_ARGS" ]; then
-    export CONFIGURE_ARGS="${RVM_PATCH_ARGS} -C ${CONFIGURE_ARGS}"
+    CONFIGURE_ARGS="${rvm_patch_args} -C ${CONFIGURE_ARGS}"
   fi
+
+  for _var in PKG_CONFIG_PATH CONFIGURE_ARGS LDFLAGS DLDFLAGS CPPFLAGS optflags ; do
+    [ -n "$(eval echo -n \$$_var)" ] && export ${_var}
+  done
+
   turn_trace_off
 }
 
