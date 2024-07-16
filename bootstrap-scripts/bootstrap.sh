@@ -243,8 +243,8 @@ function rvm_set_compile_opts() {
     opt_dir="$(brew --prefix gdbm):${opt_dir}"
   fi
 
-  if [[ "$RVM_COMPILE_OPTS_FUNC_NAME_STRING" == "1" ]]; then
-    export CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-rb_cv_function_name_string=__func__"
+  if [[ "$RVM_COMPILE_OPTS_PATCH_AUTOCONF_FUNC_NAME_STRING" == "1" ]]; then
+    export RVM_PATCH_ARGS="--patch ${REPO_BASE}/bootstrap-scripts/patches/ruby-3.1.2-configure.ac.patch"
   fi
 
   if [ -n "$opt_dir" ]; then
@@ -252,7 +252,7 @@ function rvm_set_compile_opts() {
   fi
 
   if [ -n "$CONFIGURE_ARGS" ]; then
-    export CONFIGURE_ARGS=" -C ${CONFIGURE_ARGS}"
+    export CONFIGURE_ARGS="${RVM_PATCH_ARGS} -C ${CONFIGURE_ARGS}"
   fi
   turn_trace_off
 }
@@ -415,7 +415,7 @@ case $platform_version in
           BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
           BREW_INSTALL_LIBKSBA=1 ; RVM_COMPILE_OPTS_LIBKSBA=1 ;
           BREW_INSTALL_XZ=1 ; BREW_INSTALL_GDBM=1 ; RVM_COMPILE_OPTS_GDBM=1 ;
-          RVM_COMPILE_OPTS_FUNC_NAME_STRING=1 ;
+          RVM_COMPILE_OPTS_PATCH_AUTOCONF_FUNC_NAME_STRING=1 ;
           RVM_COMPILE_OPTS_NOKOGIRI_DEPS=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
