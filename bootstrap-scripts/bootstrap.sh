@@ -182,7 +182,7 @@ function rvm_set_compile_opts() {
 
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
-    rustup default stable-${machine}-apple-darwin
+    rustup default "stable-${machine}-apple-darwin"
   fi
   if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
