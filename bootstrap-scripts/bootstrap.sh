@@ -682,38 +682,44 @@ else
   gem update --system
 fi
 
-# We need bundler in vendor path too
-check_sprout_locked_ruby_versions
-if ! bundle list | grep -q "bundler.*${sprout_bundler_ver}"; then
-  bundle exec gem install --default "bundler:${sprout_bundler_ver}"
-fi
-
-
-# TODO: Fix last chicken-egg issues
-echo "WARN: Please set up github SSH / HTTPS credentials for Chef Homebrew recipes to work!"
-
-# Bundle install soloist + gems
-if ! bundle check >/dev/null 2>&1; then
-  bundle config set --local path 'vendor/bundle' ;
-  bundle config set --local without 'development' ;
-  # --path & --without have deprecation warnings... but for now we'll try them
-  bundle install --path vendor/bundle --without development ;
-fi
-
-if [[ -n "$SOLOISTRC" && "$SOLOISTRC" != 'soloistrc' ]]; then
-  echo "INFO: Custom $SOLOISTRC passed: $SOLOISTRC"
-  if [[ -f "$SOLOISTRC" && "$(readlink soloistrc)" != "$SOLOISTRC" ]]; then
-    echo "WARN: default soloistrc file is NOT symlinked to $SOLOISTRC"
-    echo "WARN: Forcing re-link: soloistrc -> $SOLOISTRC"
-    ln -sf "$SOLOISTRC" soloistrc
+# Use rvm as a function within subshell
+# Same as above: avoids EXIT trap from `cd` override, and to ensure bundler
+# installs to locked Ruby + gemset.
+(
+  source_rvm
+  # We need bundler in vendor path too
+  check_sprout_locked_ruby_versions
+  if ! bundle list | grep -q "bundler.*${sprout_bundler_ver}"; then
+    bundle exec gem install --default "bundler:${sprout_bundler_ver}"
   fi
-fi
 
-# Auto-accept Chef license for non-interactive automation
-export CHEF_LICENSE=accept
-# Now we provision with chef, et voilá!
-# Node, it's time you grew up to who you want to be
-caffeinate -dimsu bundle exec soloist || errorout "Soloist provisioning failed!"
+
+  # TODO: Fix last chicken-egg issues
+  echo "WARN: Please set up github SSH / HTTPS credentials for Chef Homebrew recipes to work!"
+
+  # Bundle install soloist + gems
+  if ! bundle check >/dev/null 2>&1; then
+    bundle config set --local path 'vendor/bundle' ;
+    bundle config set --local without 'development' ;
+    # --path & --without have deprecation warnings... but for now we'll try them
+    bundle install --path vendor/bundle --without development ;
+  fi
+
+  if [[ -n "$SOLOISTRC" && "$SOLOISTRC" != 'soloistrc' ]]; then
+    echo "INFO: Custom $SOLOISTRC passed: $SOLOISTRC"
+    if [[ -f "$SOLOISTRC" && "$(readlink soloistrc)" != "$SOLOISTRC" ]]; then
+      echo "WARN: default soloistrc file is NOT symlinked to $SOLOISTRC"
+      echo "WARN: Forcing re-link: soloistrc -> $SOLOISTRC"
+      ln -sf "$SOLOISTRC" soloistrc
+    fi
+  fi
+
+  # Auto-accept Chef license for non-interactive automation
+  export CHEF_LICENSE=accept
+  # Now we provision with chef, et voilá!
+  # Node, it's time you grew up to who you want to be
+  caffeinate -dimsu bundle exec soloist || errorout "Soloist provisioning failed!"
+)
 
 turn_trace_off ## RVM noisy on builtin: popd
 popd; popd
