@@ -325,10 +325,12 @@ function brew_install_rvm_libs() {
 # like `cd`, and the rvm __zsh_like_cd() function triggers our traps via EXIT
 function source_rvm() {
   if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
+    turn_trace_off
     # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
     export PATH="$PATH:$HOME/.rvm/bin"
 
     [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+    turn_trace_on_if_was_on
   fi
 }
 
