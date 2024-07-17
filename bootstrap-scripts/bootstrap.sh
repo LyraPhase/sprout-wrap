@@ -125,7 +125,7 @@ prevent_sudo_timeout() {
 # shellcheck disable=SC2317
 kill_timeout_loop() {
   echo "Killing $timeout_loop_PID due to trap"
-  kill -TERM $timeout_loop_PID
+  kill -TERM "$timeout_loop_PID"
   sudo -K
 }
 trap kill_timeout_loop EXIT HUP TSTP QUIT SEGV TERM INT ABRT  # trap all common terminate signals
@@ -182,7 +182,7 @@ function rvm_set_compile_opts() {
 
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
-    rustup default stable-${machine}-apple-darwin
+    rustup default "stable-${machine}-apple-darwin"
   fi
   if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
