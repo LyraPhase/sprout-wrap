@@ -162,12 +162,13 @@ function turn_trace_off() {
   set +x ## RVM trace is NOISY!
 }
 
+# Check locked versions
+# Set vars if unset
 function check_sprout_locked_ruby_versions() {
-  # Check locked versions
-  sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
-  sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
-  sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
-  sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" "${REPO_BASE}/Gemfile.lock" | tail -n 1 | tr -d '[:blank:]')
+  [ -z "$sprout_ruby_version" ] && sprout_ruby_version=$(tr -d '\n' < "${REPO_BASE}/.ruby-version")
+  [ -z "$sprout_ruby_gemset" ] && sprout_ruby_gemset=$(tr -d '\n' < "${REPO_BASE}/.ruby-gemset")
+  [ -z "$sprout_rubygems_ver" ] && sprout_rubygems_ver=$(tr -d '\n' < "${REPO_BASE}/.rubygems-version") ## Passed to gem update --system
+  [ -z "$sprout_bundler_ver" ] && sprout_bundler_ver=$(grep -A 1 "BUNDLED WITH" "${REPO_BASE}/Gemfile.lock" | tail -n 1 | tr -d '[:blank:]')
 }
 
 function rvm_set_compile_opts() {
@@ -325,37 +326,47 @@ function brew_install_rvm_libs() {
 # like `cd`, and the rvm __zsh_like_cd() function triggers our traps via EXIT
 function source_rvm() {
   if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
-    turn_trace_off
     # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
     export PATH="$PATH:$HOME/.rvm/bin"
 
     [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-    turn_trace_on_if_was_on
   fi
 }
 
 function rvm_install_ruby_and_gemset() {
   check_sprout_locked_ruby_versions
 
+  check_trace_state
+  turn_trace_off
   rvm_set_compile_opts
   # N.B.: Use a subshell for rvm functions, so that our kill_timeout_loop is not inherited
   (
+    turn_trace_off
     source_rvm
     # shellcheck disable=SC2086
     rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
     rvm use "ruby-${sprout_ruby_version}"
     rvm gemset create "$sprout_ruby_gemset"
-    rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
   )
+  turn_trace_on_if_was_on
+}
+
+# Only use this function inside a subshell with trace off!
+function rvm_use_locked_ruby_version@gemset() {
+  check_sprout_locked_ruby_versions
+  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
 }
 
 # shellcheck disable=SC1010
 function rvm_install_bundler() {
   check_sprout_locked_ruby_versions
+  check_trace_state
+  turn_trace_off
 
   # Install bundler + rubygems in RVM path
   echo "rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}"
   (
+    turn_trace_off
     source_rvm
     rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
   )
@@ -363,28 +374,48 @@ function rvm_install_bundler() {
   # Install same version of bundler as Gemfile.lock
   echo "rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}"
   (
+    turn_trace_off
     source_rvm
     rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
   )
+  turn_trace_on_if_was_on
+}
+
+function debug_ruby_bundler_cmds() {
+  type rvm | head -1
+  printf "ruby is: "
+  command -v ruby
+  printf "bundler is: "
+  command -v bundler
 }
 
 # shellcheck disable=SC1010
 function rvm_debug_gems() {
   if [ "$trace_was_on" -eq 1 ]; then
+    check_trace_state
+    turn_trace_off
     echo "======= DEBUG ============"
-    type rvm | head -1
-    command -v ruby
-    command -v bundler
+    echo "------- bootstrap.sh -----"
+    debug_ruby_bundler_cmds
     (
+      turn_trace_off
+      echo "------- RVM Subshell ---"
       source_rvm
+      debug_ruby_bundler_cmds
+      rvm_use_locked_ruby_version@gemset
       rvm info
+      echo "------- END Subshell ---"
     )
     echo "GEMS IN SHELL ENV:"
     gem list
+    check_sprout_locked_ruby_versions
     echo "GEMS IN ${sprout_ruby_version}@${sprout_ruby_gemset}:"
     (
+      turn_trace_off
+      echo "------- RVM Subshell ---"
       source_rvm
       rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+      echo "------- END Subshell ---"
     )
     echo "======= DEBUG ============"
   fi
@@ -689,9 +720,12 @@ fi
 # Same as above: avoids EXIT trap from `cd` override, and to ensure bundler
 # installs to locked Ruby + gemset.
 (
+  turn_trace_off
   source_rvm
+  turn_trace_on_if_was_on
   # We need bundler in vendor path too
-  check_sprout_locked_ruby_versions
+  # check_sprout_locked_ruby_versions && rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  rvm_use_locked_ruby_version@gemset
   if ! bundle list | grep -q "bundler.*${sprout_bundler_ver}"; then
     bundle exec gem install --default "bundler:${sprout_bundler_ver}"
   fi
