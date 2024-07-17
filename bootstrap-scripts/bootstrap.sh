@@ -338,6 +338,7 @@ function rvm_install_ruby_and_gemset() {
   # N.B.: Use a subshell for rvm functions, so that our kill_timeout_loop is not inherited
   (
     source_rvm
+    # shellcheck disable=SC2086
     rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
     rvm use "ruby-${sprout_ruby_version}"
     rvm gemset create "$sprout_ruby_gemset"
