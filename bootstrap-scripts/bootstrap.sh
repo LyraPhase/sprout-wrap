@@ -173,6 +173,7 @@ function check_sprout_locked_ruby_versions() {
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
   local opt_dir rvm_patch_args
+  export PKG_CONFIG_PATH # Always export for pkg-config to work properly
 
   # Disable installing RI docs for speed
   cat > "${HOME}/.gemrc" <<-EOF
