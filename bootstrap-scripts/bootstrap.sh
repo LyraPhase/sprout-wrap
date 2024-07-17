@@ -738,8 +738,8 @@ fi
   if ! bundle check >/dev/null 2>&1; then
     bundle config set --local path 'vendor/bundle' ;
     bundle config set --local without 'development' ;
-    # --path & --without have deprecation warnings... but for now we'll try them
-    bundle install --path vendor/bundle --without development ;
+    export BUNDLER_WITHOUT="development" # Redundant, but could be useful for CI
+    bundle install ;
   fi
 
   if [[ -n "$SOLOISTRC" && "$SOLOISTRC" != 'soloistrc' ]]; then
