@@ -7,7 +7,6 @@
   brew 'bash-completion'
   brew 'ctags-exuberant'
   brew 'ag'
-  brew 'grc'
   brew 'ansible'
   brew 'pyenv'
   brew 'docker-machine'
