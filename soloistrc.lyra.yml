@@ -260,9 +260,9 @@ node_attributes:
       - expect
       - rename
       - lastpass-cli
+      - ykman
       - pwgen
       - terminal-notifier
-      - yubikey-personalization
 # Intel Edison / IoT tools
       - dfu-util
       - coreutils
@@ -326,9 +326,6 @@ node_attributes:
       - osxfuse
       - lastpass
       - yubico-authenticator
-      - yubico-yubikey-manager
-      - yubico-yubikey-piv-manager
-      - yubico-yubikey-personalization-gui
       - java
 #      - cyberduck
       - pcloud-drive
