@@ -203,7 +203,6 @@ node_attributes:
 #      - ctags-exuberant
       - ag
       - exa
-      - grc
       - gptfdisk
 #      - boot2docker
 #      - chromedriver
