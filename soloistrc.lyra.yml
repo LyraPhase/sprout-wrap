@@ -203,7 +203,9 @@ node_attributes:
 #      - ctags-exuberant
       - chezmoi
       - ag
+      - git-delta
       - exa
+      - fzf
       - gptfdisk
 #      - boot2docker
 #      - chromedriver
