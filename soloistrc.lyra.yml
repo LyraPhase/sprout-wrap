@@ -201,6 +201,7 @@ node_attributes:
     formulas:
       - bash-completion
 #      - ctags-exuberant
+      - chezmoi
       - ag
       - exa
       - gptfdisk
