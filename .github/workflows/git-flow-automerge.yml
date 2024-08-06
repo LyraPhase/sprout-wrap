@@ -21,7 +21,7 @@ jobs:
         id: master_branch
       - name: Check triggering user permissions
         id: check_user_permissions
-        uses: actions-cool/check-user-permission@v2.2.0
+        uses: actions-cool/check-user-permission@v2.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ github.triggering_actor }}
@@ -56,7 +56,7 @@ jobs:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
-        uses: yanamura/git-flow-merge-action@v1
+        uses: yanamura/git-flow-merge-action@v1.4.0
         with:
           github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'
