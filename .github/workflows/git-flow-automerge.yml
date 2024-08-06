@@ -59,7 +59,7 @@ jobs:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
-        uses: yanamura/git-flow-merge-action@9d4a90b72af5df91efa8db230273c95f57dd8d05
+        uses: trinitronx/git-flow-merge-action@fix-559-update-nodejs-to-v20
         with:
           github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'
