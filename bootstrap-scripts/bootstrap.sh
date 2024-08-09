@@ -9,7 +9,7 @@
 #     ./bootstrap.sh
 #
 # http://github.com/LyraPhase/sprout-wrap
-# Copyright (C) © 🄯  2013-2021 James Cuzella
+# Copyright (C) © 🄯  2013-2024 James Cuzella
 # This script may be freely distributed under the MIT license.
 
 ## Figure out OSX version (source: https://www.opscode.com/chef/install.sh)
@@ -121,9 +121,11 @@ prevent_sudo_timeout() {
 }
 
 # Kill sudo timestamp refresh PID and invalidate sudo timestamp
+# Don't warn about unreachable commands in this function (triggered by trap)
+# shellcheck disable=SC2317
 kill_timeout_loop() {
   echo "Killing $timeout_loop_PID due to trap"
-  kill -TERM $timeout_loop_PID
+  kill -TERM "$timeout_loop_PID"
   sudo -K
 }
 trap kill_timeout_loop EXIT HUP TSTP QUIT SEGV TERM INT ABRT  # trap all common terminate signals
@@ -170,6 +172,7 @@ function check_sprout_locked_ruby_versions() {
 
 function rvm_set_compile_opts() {
   turn_trace_on_if_was_on
+  local opt_dir rvm_patch_args
 
   # Disable installing RI docs for speed
   cat > "${HOME}/.gemrc" <<-EOF
@@ -177,26 +180,132 @@ function rvm_set_compile_opts() {
 	update: --no-document
 	EOF
 
+  if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-yjit"
+    rustup default "stable-${machine}-apple-darwin"
+  fi
+  if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
+  fi
+  if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
+  fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
-    export optflags="-Wno-error=implicit-function-declaration"
-    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    export DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
-    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
+    optflags="-Wno-error=implicit-function-declaration"
+    LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig:${PKG_CONFIG_PATH}"
     # Escape from current Gemfile.lock bundler version restriction for bootstrap
     # NOTE: This could cause problems in the future, b/c
     #       we depend on system bundler to write ~/.bundle/config here
     #       Let's hope they don't break config file API version
-    bash -c 'cd /tmp/ && bundle config build.ffi --enable-system-libffi'
+    bash -c "cd /tmp/ && bundle config build.ffi -- --with-libffi-dir=$(pkg-config --variable=prefix libffi )"
   fi
 
-  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" ]]; then
+  if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" && "$machine" == "arm64" ]]; then
     bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
+  elif [[ "$RVM_COMPILE_OPTS_NOKOGIRI_DEPS" == "1" ]]; then
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libxml2/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/zlib/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    local nokogiri_dep_configure_flags=(
+      "--with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
+      "--with-iconv-dir=$(brew --prefix libiconv )"
+      "--with-xml2-dir=$(pkg-config --variable=prefix libxml-2.0 )"
+      "--with-zlib-dir=$(pkg-config --variable=prefix zlib )"
+    )
+    # Run in forked subshell to avoid sprout-wrap's project Gemfile.lock context
+    (
+      cd /tmp/ && bundle config build.nokogiri --platform=ruby -- "${nokogiri_dep_configure_flags[@]}"
+    )
   fi
+
+  if [[ "$RVM_COMPILE_OPTS_READLINE" ]]; then
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
+    opt_dir="$(pkg-config --variable=prefix readline):${opt_dir}"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_NCURSES" ]]; then
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/ncurses/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-ncurses-dir=$(pkg-config --variable=prefix ncurses)"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_LIBYAML" ]]; then
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libyaml/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    # Note: The pkg-config .pc file is named: yaml-0.1.pc
+    # This may be a Homebrew packaging error, so if it changes, we could switch to using: brew --prefix libyaml
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
+    opt_dir="$(pkg-config --variable=prefix yaml-0.1):${opt_dir}"
+  fi
+  if [[ "$RVM_COMPILE_OPTS_LIBKSBA" ]]; then
+    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libksba/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    # Note: This pkg-config .pc file is named: ksba.pc
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libksba-dir=$(pkg-config --variable=prefix ksba)"
+  fi
+  # Optional Ruby Std-lib dependency
+  # See: https://ruby-doc.org/stdlib-1.9.3/libdoc/gdbm/rdoc/GDBM.html
+  if [[ "$RVM_COMPILE_OPTS_GDBM" ]]; then
+    opt_dir="$(brew --prefix gdbm):${opt_dir}"
+  fi
+
+  if [[ "$RVM_COMPILE_OPTS_PATCH_AUTOCONF_FUNC_NAME_STRING" == "1" ]]; then
+    rvm_patch_args="--patch ${REPO_BASE}/bootstrap-scripts/patches/ruby-3.1.2-configure.ac.patch"
+  fi
+
+  if [ -n "$opt_dir" ]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-opt-dir=${opt_dir}"
+  fi
+
+  if [ -n "$CONFIGURE_ARGS" ]; then
+    CONFIGURE_ARGS="${rvm_patch_args} -C ${CONFIGURE_ARGS}"
+  fi
+
+  for _var in PKG_CONFIG_PATH CONFIGURE_ARGS LDFLAGS DLDFLAGS CPPFLAGS optflags ; do
+    [ -n "$(eval echo -n \$$_var)" ] && export ${_var?}
+  done
+
   turn_trace_off
 }
 
 function brew_install_rvm_libs() {
+  # Refer to Ruby dependency list from ruby-install to keep this updated
+  # https://github.com/postmodern/ruby-install/blob/master/share/ruby-install/ruby/dependencies.txt#L5
+  if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
+    grep -q 'rust' Brewfile || echo "brew 'rust'" >> Brewfile
+    grep -q 'rustup-init' Brewfile || echo "brew 'rustup-init'" >> Brewfile
+  fi
+  if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
+    grep -q 'jemalloc' Brewfile || echo "brew 'jemalloc'" >> Brewfile
+  fi
+  # Note: Beware of CVE-2024-3094
+  # Cannot lock version due to https://github.com/Homebrew/homebrew-bundle/issues/547#issuecomment-525443604
+  # So, we must rely on the Homebrew community to not push the new versions until it's been vetted
+  if [[ "$BREW_INSTALL_XZ" == "1" ]]; then
+    grep -q 'xz' Brewfile || echo "brew 'xz'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_BISON" == "1" ]]; then
+    grep -q 'bison' Brewfile || echo "brew 'bison'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_GDBM" == "1" ]]; then
+    grep -q 'gdbm' Brewfile || echo "brew 'gdbm'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_OPENSSL3" == "1" ]]; then
+    grep -q 'openssl@3' Brewfile || echo "brew 'openssl@3'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_READLINE" == "1" ]]; then
+    grep -q 'readline' Brewfile || echo "brew 'readline'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_NCURSES" == "1" ]]; then
+    grep -q 'ncurses' Brewfile || echo "brew 'ncurses'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_LIBYAML" == "1" ]]; then
+    grep -q 'libyaml' Brewfile || echo "brew 'libyaml'" >> Brewfile
+  fi
+  if [[ "$BREW_INSTALL_LIBKSBA" == "1" ]]; then
+    grep -q 'libksba' Brewfile || echo "brew 'libksba'" >> Brewfile
+  fi
   if [[ "$CI" != 'true' ]]; then
     if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
       grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
@@ -205,7 +314,20 @@ function brew_install_rvm_libs() {
       grep -q 'libxml2' Brewfile || echo "brew 'libxml2'" >> Brewfile
       grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
       grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
+      grep -q 'zlib' Brewfile || echo "brew 'zlib'" >> Brewfile
     fi
+  fi
+}
+
+# Use rvm as a function within each subshell
+# This is necessary to do per-subshell because it overrides built-in commands
+# like `cd`, and the rvm __zsh_like_cd() function triggers our traps via EXIT
+function source_rvm() {
+  if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
+    # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+    export PATH="$PATH:$HOME/.rvm/bin"
+
+    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
   fi
 }
 
@@ -213,11 +335,15 @@ function rvm_install_ruby_and_gemset() {
   check_sprout_locked_ruby_versions
 
   rvm_set_compile_opts
-
-  rvm install "ruby-${sprout_ruby_version}"
-  rvm use "ruby-${sprout_ruby_version}"
-  rvm gemset create "$sprout_ruby_gemset"
-  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  # N.B.: Use a subshell for rvm functions, so that our kill_timeout_loop is not inherited
+  (
+    source_rvm
+    # shellcheck disable=SC2086
+    rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
+    rvm use "ruby-${sprout_ruby_version}"
+    rvm gemset create "$sprout_ruby_gemset"
+    rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  )
 }
 
 # shellcheck disable=SC1010
@@ -226,11 +352,17 @@ function rvm_install_bundler() {
 
   # Install bundler + rubygems in RVM path
   echo "rvm ${sprout_ruby_version} do gem update --system ${sprout_rubygems_ver}"
-  rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
+  (
+    source_rvm
+    rvm "${sprout_ruby_version}" do gem update --system "${sprout_rubygems_ver}"
+  )
 
   # Install same version of bundler as Gemfile.lock
   echo "rvm ${sprout_ruby_version} do gem install --default bundler:${sprout_bundler_ver}"
-  rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
+  (
+    source_rvm
+    rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
+  )
 }
 
 # shellcheck disable=SC1010
@@ -240,11 +372,17 @@ function rvm_debug_gems() {
     type rvm | head -1
     command -v ruby
     command -v bundler
-    rvm info
+    (
+      source_rvm
+      rvm info
+    )
     echo "GEMS IN SHELL ENV:"
     gem list
     echo "GEMS IN ${sprout_ruby_version}@${sprout_ruby_gemset}:"
-    rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+    (
+      source_rvm
+      rvm "${sprout_ruby_version}"@"${sprout_ruby_gemset}" do gem list
+    )
     echo "======= DEBUG ============"
   fi
 }
@@ -287,7 +425,16 @@ detect_platform_version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
   12.*)
-          XCODE_DMG='Xcode_13.3.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
+          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1;
+          BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ;
+          RVM_ENABLE_YJIT=1 ; RVM_WITH_JEMALLOC=1 ;
+          BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
+          BREW_INSTALL_NCURSES=1 ; RVM_COMPILE_OPTS_NCURSES=1 ;
+          BREW_INSTALL_LIBYAML=1 ; RVM_COMPILE_OPTS_LIBYAML=1 ;
+          BREW_INSTALL_LIBKSBA=1 ; RVM_COMPILE_OPTS_LIBKSBA=1 ;
+          BREW_INSTALL_XZ=1 ; BREW_INSTALL_GDBM=1 ; RVM_COMPILE_OPTS_GDBM=1 ;
+          RVM_COMPILE_OPTS_PATCH_AUTOCONF_FUNC_NAME_STRING=1 ;
+          RVM_COMPILE_OPTS_NOKOGIRI_DEPS=1 ;
           BYPASS_APPLE_TCC="1"; BREW_INSTALL_NOKOGIRI_LIBS="1" ; RVM_COMPILE_OPTS_M1_NOKOGIRI=1 ;;
   11.6*)  XCODE_DMG='Xcode_13.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES ;
           BYPASS_APPLE_TCC="1" ;;
@@ -381,7 +528,10 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
   # Source: https://web.archive.org/web/20211210020829/https://techviewleo.com/install-xcode-command-line-tools-macos/
   if [ ! -d /Library/Developer/CommandLineTools ]; then
     xcode-select --install
-    sleep 1
+    # Wait for CLT Installer App starts & grab PID
+    while ! clt_pid=$(pgrep -f 'Install Command Line Developer Tools.app' 2>/dev/null | head -n1) ; do
+      sleep 1
+    done
     osascript <<-EOD
   	  tell application "System Events"
   	    tell process "Install Command Line Developer Tools"
@@ -390,6 +540,9 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
   	    end tell
   	  end tell
 EOD
+    # Wait for CLT to be fully installed before continuing
+    # wait for non-child PID (Darwin)
+    lsof -p "$clt_pid" +r 1 &>/dev/null
   else
     echo "INFO: Found /Library/Developer/CommandLineTools already existing. skipping..."
   fi
@@ -473,8 +626,8 @@ if [ "$machine" == "arm64" ]; then
   export HOMEBREW_PREFIX=/opt/homebrew
   export PATH="/opt/homebrew/bin:${PATH}"
 else
-  export HOMEBREW_PREFIX=/usr/local/homebrew
-  export PATH="/usr/local/homebrew/bin:${PATH}"
+  export HOMEBREW_PREFIX=/usr/local
+  export PATH="/usr/local/bin:${PATH}"
 fi
 
 brew_install_rvm_libs
@@ -514,13 +667,6 @@ elif [[ "$CI" != 'true' ]]; then
   # RVM trace is NOISY!
   check_trace_state
   turn_trace_off
-
-  if ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
-    # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-    export PATH="$PATH:$HOME/.rvm/bin"
-
-    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-  fi
 
   # Install .ruby-version @ .ruby-gemset
   rvm_install_ruby_and_gemset
