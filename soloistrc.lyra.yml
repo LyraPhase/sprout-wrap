@@ -198,6 +198,7 @@ node_attributes:
       - jlhonora/lsusb
       - homebrew/cask-drivers
       - chef/homebrew-chef
+      - martido/homebrew-graph
     formulas:
       - bash-completion
 #      - ctags-exuberant
