@@ -204,6 +204,7 @@ node_attributes:
 #      - ctags-exuberant
       - chezmoi
       - ag
+      - bat
       - git-delta
       - eza
       - fzf
