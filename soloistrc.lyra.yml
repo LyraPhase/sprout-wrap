@@ -206,6 +206,7 @@ node_attributes:
       - ag
       - bat
       - git-delta
+      - rg
       - eza
       - fzf
       - gptfdisk
