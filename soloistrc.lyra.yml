@@ -205,7 +205,7 @@ node_attributes:
       - chezmoi
       - ag
       - git-delta
-      - exa
+      - eza
       - fzf
       - gptfdisk
 #      - boot2docker
