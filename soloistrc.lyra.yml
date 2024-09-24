@@ -274,6 +274,7 @@ node_attributes:
       - dfu-util
       - coreutils
       - lsusb
+      - picocom
     casks:
       - asana
       - backuploupe
