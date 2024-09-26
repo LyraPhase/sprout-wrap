@@ -275,6 +275,7 @@ node_attributes:
       - coreutils
       - lsusb
       - picocom
+      - minicom
     casks:
       - asana
       - backuploupe
