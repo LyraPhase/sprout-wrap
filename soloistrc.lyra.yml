@@ -195,7 +195,6 @@ node_attributes:
     taps:
       - homebrew/homebrew-core
       - trinitronx/pcloud
-      - jlhonora/lsusb
       - homebrew/cask-drivers
       - chef/homebrew-chef
       - martido/homebrew-graph
@@ -273,7 +272,7 @@ node_attributes:
 # Intel Edison / IoT tools
       - dfu-util
       - coreutils
-      - lsusb
+      - lsusb-laniksj
       - picocom
       - minicom
     casks:
