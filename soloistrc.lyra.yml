@@ -231,6 +231,8 @@ node_attributes:
       - shellcheck
       - yamllint
       - ansible-lint
+      - sshpass
+      - ansible
       - tmux
 # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
 # Also fixes Sublime Text "subl" command not working
