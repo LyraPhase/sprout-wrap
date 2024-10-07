@@ -198,6 +198,7 @@ node_attributes:
       - homebrew/cask-drivers
       - chef/homebrew-chef
       - martido/homebrew-graph
+      - auth0/auth0-cli
     formulas:
       - bash-completion
 #      - ctags-exuberant
@@ -271,6 +272,7 @@ node_attributes:
       - ykman
       - pwgen
       - terminal-notifier
+      - auth0
 # Intel Edison / IoT tools
       - dfu-util
       - coreutils
