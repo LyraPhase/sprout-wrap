@@ -231,6 +231,7 @@ node_attributes:
       - pre-commit
       - shellcheck
       - yamllint
+      - ansible-builder
       - ansible-lint
       - sshpass
       - ansible
