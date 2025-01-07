@@ -24,7 +24,7 @@ jobs:
         id: master_branch
       - name: Check triggering user permissions
         id: check_user_permissions
-        uses: actions-cool/check-user-permission@v2.2.1
+        uses: actions-cool/check-user-permission@v2.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ github.triggering_actor }}
