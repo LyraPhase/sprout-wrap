@@ -43,7 +43,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-11, macos-12]
+        os: [macos-13, macos-14, macos-15]
     steps:
       - name: DEBUG What is GitHub Actions IP?
         run: |
