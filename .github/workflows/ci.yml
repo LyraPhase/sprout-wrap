@@ -43,7 +43,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-11, macos-12]
+        os: [macos-13, macos-14, macos-15]
     steps:
       - name: DEBUG What is GitHub Actions IP?
         run: |
@@ -78,21 +78,21 @@ jobs:
         run: |
           echo BREWFILE_PATH=$BREWFILE_PATH
           echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
-        if: env.debug_ci == 'true'
+        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
       - name: DEBUG - Print all shell env exports
         run: export -p
-        if: env.debug_ci == 'true'
+        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
       - name: DEBUG - List workspace and Homebrew contents
         run: |
           ls -lAR ${GITHUB_WORKSPACE}
           ls -lR /usr/local/Homebrew
-        if: env.debug_ci == 'true'
+        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
       - name: Generate Brewfile from soloistrc test fixture
         run: make brewfile
       - name: DEBUG - Where are Brewfiles?
         run: |
           find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
-        if: env.debug_ci == 'true'
+        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
       - name: Configure Homebrew cache
         uses: actions/cache@v4
         with:
@@ -127,4 +127,4 @@ jobs:
       - name: DEBUG - Where are Brewfiles? (exclude nodes and vendor dirs)
         run: |
           find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
-        if: env.debug_ci == 'true'
+        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
