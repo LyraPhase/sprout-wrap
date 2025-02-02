@@ -232,6 +232,7 @@ node_attributes:
       - shellcheck
       - yamllint
       - ansible-builder
+      - ansible-creator
       - ansible-lint
       - sshpass
       - ansible

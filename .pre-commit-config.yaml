@@ -23,7 +23,11 @@ repos:
     -   id: check-merge-conflict
     -   id: check-symlinks
     -   id: check-yaml
-        exclude: \.kitchen\.libvirt\.ssh\.yml
+        exclude: |
+            (?x)^(
+                \.kitchen\.libvirt\.ssh\.yml|
+                \.kitchen\.libvirt\.qemu-tls\.yml
+            )$
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
         exclude: .*\.patch
