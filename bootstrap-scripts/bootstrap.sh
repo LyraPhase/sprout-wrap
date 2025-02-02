@@ -124,7 +124,7 @@ prevent_sudo_timeout() {
 # shellcheck disable=SC2317 # false-positive koalaman/shellcheck#2660
 kill_timeout_loop() {
   echo "Killing $timeout_loop_PID due to trap"
-  kill -TERM $timeout_loop_PID
+  kill -TERM "$timeout_loop_PID"
   sudo -K
 }
 trap kill_timeout_loop EXIT HUP TSTP QUIT SEGV TERM INT ABRT  # trap all common terminate signals
