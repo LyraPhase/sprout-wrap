@@ -121,6 +121,7 @@ prevent_sudo_timeout() {
 }
 
 # Kill sudo timestamp refresh PID and invalidate sudo timestamp
+# shellcheck disable=SC2317 # false-positive koalaman/shellcheck#2660
 kill_timeout_loop() {
   echo "Killing $timeout_loop_PID due to trap"
   kill -TERM $timeout_loop_PID
