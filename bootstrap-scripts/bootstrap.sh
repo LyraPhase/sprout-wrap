@@ -333,6 +333,34 @@ function brew_install_rvm_libs() {
   fi
 }
 
+# Install RVM if not already installed
+function install_rvm() {
+  if ! command -v rvm && ! type rvm 2>&1 | grep -q 'rvm is a function' ; then
+    export rvm_user_install_flag=1
+    export rvm_prefix="$HOME"
+    export rvm_path="${rvm_prefix}/.rvm"
+
+    echo "Installing RVM..." >&2
+
+    bash -c "${REPO_BASE}/bootstrap-scripts/bootstrap-rvm.sh $USER"
+
+    # RVM trace is NOISY!
+    check_trace_state
+    turn_trace_off
+
+    # Install .ruby-version @ .ruby-gemset
+    rvm_install_ruby_and_gemset
+
+    rvm_install_bundler
+
+    rvm_debug_gems
+
+    turn_trace_on_if_was_on
+  else
+    echo 'RVM already installed... skipping installation' >&2
+  fi
+}
+
 # Use rvm as a function within each subshell
 # This is necessary to do per-subshell because it overrides built-in commands
 # like `cd`, and the rvm __zsh_like_cd() function triggers our traps via EXIT
@@ -724,28 +752,9 @@ if [[ $use_system_ruby == "1" ]]; then
 
 elif [[ "$CI" != 'true' ]]; then
   USE_SUDO=''
-  export rvm_user_install_flag=1
-  export rvm_prefix="$HOME"
-  export rvm_path="${rvm_prefix}/.rvm"
-
-  echo "Installing RVM..." >&2
-
-  bash -c "${REPO_BASE}/bootstrap-scripts/bootstrap-rvm.sh $USER"
-
-  # RVM trace is NOISY!
-  check_trace_state
-  turn_trace_off
-
-  # Install .ruby-version @ .ruby-gemset
-  rvm_install_ruby_and_gemset
-
-  rvm_install_bundler
-
-  rvm_debug_gems
-
-  turn_trace_on_if_was_on
-
+  install_rvm
 else
+  install_rvm
   # Just update bundler in CI
   gem update --system
 fi
