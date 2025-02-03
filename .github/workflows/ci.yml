@@ -128,3 +128,14 @@ jobs:
         run: |
           find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
         if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
+      - name: Upload Logs on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build failure logs
+          path: |
+            /var/log/install.log
+            ~/.rvm/log/**/*.log
+            ~/Library/Logs/Homebrew/**/*
+          overwrite: true
+          compression-level: 9
