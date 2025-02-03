@@ -705,7 +705,7 @@ if [[ $use_system_ruby == "1" ]]; then
   # User probably knows what they're doing but warn anyway
   echo "WARN: Using macOS system Ruby is not recommended!" >&2
   echo "WARN: Updating system bundler gem will modify stock macOS system files!" >&2
-  if [[ "$override_use_system_ruby_prompt" != '1' ]]; then
+  if [[ "${override_use_system_ruby_prompt:-0}" != '1' ]]; then
     # shellcheck disable=SC2162
     read -p 'Are you sure you want to continue and use macOS System Ruby? [y/N]: ' -d $'\n' use_system_ruby_answer
     use_system_ruby_answer="$(echo -n "$use_system_ruby_answer" | tr '[:upper:]' '[:lower:]')"
