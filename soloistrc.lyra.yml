@@ -197,6 +197,7 @@ node_attributes:
       - trinitronx/pcloud
       - homebrew/cask-drivers
       - chef/homebrew-chef
+      - colindean/fund
       - martido/homebrew-graph
       - auth0/auth0-cli
     formulas:
