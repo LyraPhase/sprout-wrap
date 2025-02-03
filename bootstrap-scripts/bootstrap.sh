@@ -510,7 +510,7 @@ errorout() {
   echo -e "\x1b[31;1mERROR:\x1b[0m ${1}"; exit 1
 }
 
-pushd "$(pwd)"
+pushd "$(pwd)" || exit
 
 # TODO: Figure out if Xcodes CLI tool will work?
 #       https://github.com/RobotsAndPencils/Xcodes
@@ -535,13 +535,13 @@ if [ ! -d "/Applications/Xcode.app" ]; then
       sudo mv ./Xcode.app /Applications/
     else
       xar -C "${TMP_DIR}/" -xf "$XCODE_DMG"
-      pushd "$TMP_DIR"
+      pushd "$TMP_DIR" || exit
       curl -O https://gist.githubusercontent.com/pudquick/ff412bcb29c9c1fa4b8d/raw/24b25538ea8df8d0634a2a6189aa581ccc6a5b4b/parse_pbzx2.py
       python parse_pbzx2.py Content
       xz -d Content.part*.cpio.xz
       sudo /bin/sh -c 'cat ./Content.part*.cpio' | sudo cpio -idm
       sudo mv ./Xcode.app /Applications/
-      popd
+      popd || exit
     fi
     [ -d "$TMP_DIR" ] && rm -rf "${TMP_DIR:?}/"
   else
@@ -654,17 +654,17 @@ if [[ "$CI" == 'true' || "$TEST_KITCHEN" == '1' ]]; then
   echo "INFO: NOT checking out git repo"
   echo "INFO: Running soloist from ${REPO_BASE}/test/fixtures"
   # Must use pushd to keep dir stack 2 items deep
-  pushd "${REPO_BASE}/test/fixtures"
+  pushd "${REPO_BASE}/test/fixtures" || exit
 else
   # Checkout sprout-wrap after XCode CLI tools, because we need it for git now
-  mkdir -p "$SOLOIST_DIR"; cd "$SOLOIST_DIR/"
+  mkdir -p "$SOLOIST_DIR"; cd "$SOLOIST_DIR/" || exit
 
   echo "INFO: Checking out sprout-wrap..."
   if [ -d sprout-wrap ]; then
     pushd sprout-wrap && git pull
   else
     git clone "$SPROUT_WRAP_URL"
-    pushd sprout-wrap
+    pushd sprout-wrap || exit
     git checkout "$SPROUT_WRAP_BRANCH"
   fi
 fi
@@ -791,6 +791,7 @@ fi
 )
 
 turn_trace_off ## RVM noisy on builtin: popd
-popd; popd
+# shellcheck disable=SC2164
+popd && popd
 
 exit
