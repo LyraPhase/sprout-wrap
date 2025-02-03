@@ -792,10 +792,10 @@ fi
 (
   turn_trace_off
   source_rvm
-  turn_trace_on_if_was_on
   # We need bundler in vendor path too
   # check_sprout_locked_ruby_versions && rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
   rvm_use_locked_ruby_version@gemset
+  turn_trace_on_if_was_on
   if ! bundle list | grep -q "bundler.*${sprout_bundler_ver}"; then
     bundle exec gem install --default "bundler:${sprout_bundler_ver}"
   fi
