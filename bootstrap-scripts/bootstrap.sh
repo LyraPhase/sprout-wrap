@@ -358,6 +358,8 @@ function install_rvm() {
     # Install .ruby-version @ .ruby-gemset
     rvm_install_ruby_and_gemset
 
+    debug_pkg_config_path
+
     rvm_install_bundler
 
     rvm_debug_gems
@@ -427,6 +429,24 @@ function rvm_install_bundler() {
     rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
   )
   turn_trace_on_if_was_on
+}
+
+function debug_pkg_config_path() {
+  if [ "$trace_was_on" -eq 1 ]; then
+    check_trace_state
+    turn_trace_off
+    echo "======= DEBUG ============"
+    echo "------- PKG_CONFIG_PATH -----"
+    local _path _pkg_config_path_array
+    printf '%s' "$PKG_CONFIG_PATH" | tr ':' '\n' \
+      | while IFS='' read -r _path; do
+        if [ -d "$_path" ]; then
+          echo "$_path" >&2
+          ls -l "$_path" >&2
+        fi
+      done
+    echo "======= DEBUG ============"
+  fi
 }
 
 function debug_ruby_bundler_cmds() {
