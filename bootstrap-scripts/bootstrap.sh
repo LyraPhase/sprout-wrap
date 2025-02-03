@@ -274,7 +274,7 @@ function rvm_set_compile_opts() {
   fi
 
   for _var in PKG_CONFIG_PATH CONFIGURE_ARGS LDFLAGS DLDFLAGS CPPFLAGS optflags ; do
-    [ -n "$(eval echo -n \$$_var)" ] && export ${_var?}
+    [ -n "$(eval echo -n \$"$_var")" ] && export "${_var?}"
   done
 
   turn_trace_off
