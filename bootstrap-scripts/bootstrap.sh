@@ -365,7 +365,7 @@ function rvm_install_ruby_and_gemset() {
 # Only use this function inside a subshell with trace off!
 function rvm_use_locked_ruby_version@gemset() {
   check_sprout_locked_ruby_versions
-  rvm use "ruby-${sprout_ruby_version}"@"${sprout_ruby_gemset}"
+  rvm use "ruby-${sprout_ruby_version}@${sprout_ruby_gemset}"
 }
 
 # shellcheck disable=SC1010
