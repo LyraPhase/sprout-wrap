@@ -188,7 +188,7 @@ function rvm_set_compile_opts() {
   fi
   if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
   fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
