@@ -9,7 +9,7 @@
 #     ./bootstrap.sh
 #
 # http://github.com/LyraPhase/sprout-wrap
-# Copyright (C) © 🄯  2013-2024 James Cuzella
+# Copyright (C) © 🄯  2013-2025 James Cuzella
 # This script may be freely distributed under the MIT license.
 
 ## Figure out OSX version (source: https://www.opscode.com/chef/install.sh)
@@ -195,11 +195,19 @@ function rvm_set_compile_opts() {
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
-    optflags="-Wno-error=implicit-function-declaration"
-    LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    DLDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
-    CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
+      # Print all pkg-config variables in scriptable form with prefix: LIBFFI_
+      eval "$(PKG_CONFIG_PATH=${_HOMEBREW_OPT}/libffi/lib/pkgconfig pkg-config --print-variables --env=LIBFFI libffi)"
+    else
+      LIBFFI_PCFILEDIR="${_HOMEBREW_OPT}/libffi/lib/pkgconfig"
+      LIBFFI_INCLUDEDIR="${_HOMEBREW_OPT}/libffi/include"
+      LIBFFI_LIBDIR="${_HOMEBREW_OPT}/libffi/lib"
+    fi
+    export optflags="-Wno-error=implicit-function-declaration"
+    export LDFLAGS="-L${LIBFFI_LIBDIR}"
+    export DLDFLAGS="-L${LIBFFI_LIBDIR}"
+    export CPPFLAGS="-I${LIBFFI_INCLUDEDIR}"
+    export PKG_CONFIG_PATH="${LIBFFI_PCFILEDIR}${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     # Escape from current Gemfile.lock bundler version restriction for bootstrap
     # NOTE: This could cause problems in the future, b/c
     #       we depend on system bundler to write ~/.bundle/config here
@@ -210,7 +218,7 @@ function rvm_set_compile_opts() {
   if [[ "$RVM_COMPILE_OPTS_M1_NOKOGIRI" == "1" && "$machine" == "arm64" ]]; then
     bash -c 'cd /tmp/ && bundle config build.nokogiri --platform=ruby -- --use-system-libraries'
   elif [[ "$RVM_COMPILE_OPTS_NOKOGIRI_DEPS" == "1" ]]; then
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libxslt/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libxml2/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/zlib/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/libxslt/lib/pkgconfig:${_HOMEBREW_OPT}/libxml2/lib/pkgconfig:${_HOMEBREW_OPT}/zlib/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     local nokogiri_dep_configure_flags=(
       "--with-xslt-dir=$(pkg-config --variable=prefix libxslt )"
       "--with-iconv-dir=$(brew --prefix libiconv )"
@@ -224,25 +232,25 @@ function rvm_set_compile_opts() {
   fi
 
   if [[ "$RVM_COMPILE_OPTS_READLINE" ]]; then
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/readline/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-readline-dir=$(pkg-config --variable=prefix readline)"
     opt_dir="$(pkg-config --variable=prefix readline):${opt_dir}"
   fi
 
   if [[ "$RVM_COMPILE_OPTS_NCURSES" ]]; then
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/ncurses/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/ncurses/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-ncurses-dir=$(pkg-config --variable=prefix ncurses)"
   fi
 
   if [[ "$RVM_COMPILE_OPTS_LIBYAML" ]]; then
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libyaml/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/libyaml/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     # Note: The pkg-config .pc file is named: yaml-0.1.pc
     # This may be a Homebrew packaging error, so if it changes, we could switch to using: brew --prefix libyaml
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libyaml-dir=$(pkg-config --variable=prefix yaml-0.1)"
     opt_dir="$(pkg-config --variable=prefix yaml-0.1):${opt_dir}"
   fi
   if [[ "$RVM_COMPILE_OPTS_LIBKSBA" ]]; then
-    PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libksba/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/libksba/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     # Note: This pkg-config .pc file is named: ksba.pc
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libksba-dir=$(pkg-config --variable=prefix ksba)"
   fi
@@ -309,6 +317,9 @@ function brew_install_rvm_libs() {
     grep -q 'libksba' Brewfile || echo "brew 'libksba'" >> Brewfile
   fi
   if [[ "$CI" != 'true' ]]; then
+    if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
+      grep -q 'pkg-config' Brewfile || echo "brew 'pkg-config'" >> Brewfile
+    fi
     if [[ "$BREW_INSTALL_LIBFFI" == "1" ]]; then
       grep -q 'libffi' Brewfile || echo "brew 'libffi'" >> Brewfile
     fi
@@ -458,8 +469,20 @@ detect_platform_version
 # Determine which XCode version to use based on platform version
 # https://developer.apple.com/downloads/index.action
 case $platform_version in
+  15.*)
+          XCODE_DMG="${XCODE_DMG:-Xcode_16.2.xip}";
+           ;& ## Fallthrough
+  14.*)
+          XCODE_DMG="${XCODE_DMG:-Xcode_15.1.xip}";
+           ;& ## Fallthrough
+  13.*)
+          XCODE_DMG="${XCODE_DMG:-Xcode_15.1.xip}";
+           ;& ## Fallthrough
   12.*)
-          XCODE_DMG='Xcode_14.3.1.xip'; export TRY_XCI_OSASCRIPT_FIRST=1; BREW_INSTALL_LIBFFI=1; RVM_COMPILE_OPTS_M1_LIBFFI=1;
+          XCODE_DMG="${XCODE_DMG:-Xcode_14.3.1.xip}";
+          TRY_XCI_OSASCRIPT_FIRST=1;
+          BREW_INSTALL_PKG_CONFIG=1;
+          BREW_INSTALL_LIBFFI=1 ; RVM_COMPILE_OPTS_M1_LIBFFI=1 ;
           BREW_INSTALL_OPENSSL3=1 ; RVM_COMPILE_OPTS_OPENSSL3=1 ;
           RVM_ENABLE_YJIT=1 ; RVM_WITH_JEMALLOC=1 ;
           BREW_INSTALL_READLINE=1 ; RVM_COMPILE_OPTS_READLINE=1 ;
@@ -649,6 +672,8 @@ fi
 check_trace_state
 turn_trace_off
 
+export HOMEBREW_NO_INSTALL_FROM_API=1
+
 if [ -x "$(command -v brew)" ] && brew --version; then
   :
 else
@@ -657,15 +682,21 @@ fi
 turn_trace_on_if_was_on
 
 if [ "$machine" == "arm64" ]; then
-  export HOMEBREW_PREFIX=/opt/homebrew
+  export _HOMEBREW_PREFIX=/opt/homebrew
+  export _HOMEBREW_OPT=${_HOMEBREW_PREFIX}/opt ## TODO: Verify which path the Cellar symlinks live in
   export PATH="/opt/homebrew/bin:${PATH}"
 else
-  export HOMEBREW_PREFIX=/usr/local
+  ## TODO: What have they changed it to now?
+  export _HOMEBREW_PREFIX=/usr/local
+  # export _HOMEBREW_PREFIX=/usr/local/homebrew
+  export _HOMEBREW_OPT=/usr/local/opt
+  #export PATH="/usr/local/homebrew/bin:${PATH}"
   export PATH="/usr/local/bin:${PATH}"
 fi
 
 brew_install_rvm_libs
 # Install Chef Workstation SDK via Brewfile
+[ -x "$(command -v brew)" ] && brew tap --force homebrew/cask
 [ -x "$(command -v brew)" ] && brew bundle install
 
 if [[ $use_system_ruby == "1" ]]; then
