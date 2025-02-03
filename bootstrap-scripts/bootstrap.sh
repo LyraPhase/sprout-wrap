@@ -17,6 +17,7 @@ function detect_platform_version() {
   # Matching the tab-space with sed is error-prone
   platform_version=$(sw_vers | awk '/^ProductVersion:/ { print $2 }')
 
+  # shellcheck disable=SC2034
   major_version=$(echo "$platform_version" | cut -d. -f1,2)
 
   # x86_64 Apple hardware often runs 32-bit kernels (see OHAI-63)
