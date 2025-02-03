@@ -527,7 +527,7 @@ if [ ! -d "/Applications/Xcode.app" ]; then
 
   # Why does Apple have to make everything more difficult?
   if [[ "$XCODE_DMG" =~ ^.*\.xip$ ]]; then
-    pkgutil --check-signature $XCODE_DMG
+    pkgutil --check-signature "$XCODE_DMG"
     TMP_DIR=$(mktemp -d /tmp/xcode-installer.XXXXXXXXXX)
 
     if [[ -x "$(command -v xip)" ]]; then
