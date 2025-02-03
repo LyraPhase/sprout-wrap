@@ -471,13 +471,13 @@ detect_platform_version
 case $platform_version in
   15.*)
           XCODE_DMG="${XCODE_DMG:-Xcode_16.2.xip}";
-           ;& ## Fallthrough
+           ;;& ## Fallthrough
   14.*)
           XCODE_DMG="${XCODE_DMG:-Xcode_15.1.xip}";
-           ;& ## Fallthrough
+           ;;& ## Fallthrough
   13.*)
           XCODE_DMG="${XCODE_DMG:-Xcode_15.1.xip}";
-           ;& ## Fallthrough
+           ;;& ## Fallthrough
   12.*)
           XCODE_DMG="${XCODE_DMG:-Xcode_14.3.1.xip}";
           TRY_XCI_OSASCRIPT_FIRST=1;
