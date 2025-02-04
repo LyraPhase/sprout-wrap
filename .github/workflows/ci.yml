@@ -138,5 +138,6 @@ jobs:
             ~/.rvm/log/**/*.log
             ~/Library/Logs/Homebrew/**/*
             ~/.rvm/rubies/ruby-*/lib/ruby/gems/*/extensions/**/mkmf.log
+            ~/.rvm/rubies/ruby-*/lib/ruby/gems/*/extensions/**/gem_make.out
           overwrite: true
           compression-level: 9
