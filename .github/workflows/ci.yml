@@ -67,10 +67,10 @@ jobs:
           sudo tee -a ~root/.profile <<EOPROFILE
           SSH_AUTH_SOCK=${{ env.SSH_AUTH_SOCK }}
           EOPROFILE
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-          cache-version: 1
+      # - uses: ruby/setup-ruby@v1
+      #   with:
+      #     bundler-cache: true
+      #     cache-version: 1
       - name: Set BREWFILE_PATH env var
         run: |
           echo "BREWFILE_PATH=${GITHUB_WORKSPACE}/test/fixtures/tmp/Brewfile.ci" >> $GITHUB_ENV
