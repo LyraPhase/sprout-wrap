@@ -364,6 +364,7 @@ function install_rvm() {
     rvm_install_ruby_and_gemset
 
     debug_pkg_config_path
+    rvm_debug_autolibs
 
     rvm_install_bundler
 
@@ -434,6 +435,17 @@ function rvm_install_bundler() {
     rvm "${sprout_ruby_version}" do gem install --default "bundler:${sprout_bundler_ver}"
   )
   turn_trace_on_if_was_on
+}
+
+function rvm_debug_autolibs() {
+  if [ "$trace_was_on" -eq 1 ]; then
+    check_trace_state
+    turn_trace_off
+    echo "======= DEBUG ============"
+    echo "------- rvm autolibs -----"
+    echo "rvm autolibs = $(rvm autolibs show)" >&2
+    echo "======= DEBUG ============"
+  fi
 }
 
 function debug_pkg_config_path() {
