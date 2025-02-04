@@ -28,6 +28,7 @@ function detect_platform_version() {
     machine="x86_64"
   elif [[ "$arm64" == '1' ]]; then
     machine="arm64"
+    machine_apple="$(machine)"
   fi
 }
 
@@ -208,8 +209,8 @@ function rvm_set_compile_opts() {
     export LDSHARED="clang -bundle -Wl,-undefined,dynamic_lookup"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-shared"
   fi
-  if [ "$machine" == "arm64" ]; then
-    export CFLAGS="${CFLAGS} -arch arm64e"
+  if [ "$machine" == "arm64" ] && [ "${machine_apple:-}" == "arm64e" ]; then
+    CONFIGURE_ARGS="--with-arch=arm64e ${CONFIGURE_ARGS}"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
