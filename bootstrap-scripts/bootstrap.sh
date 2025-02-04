@@ -498,11 +498,10 @@ function debug_apple_arch() {
   sysctl machdep
   printf "rbconfig CC: "
   ruby -r rbconfig -e "puts RbConfig::CONFIG['CC']"
-  ruby -r rbconfig -e <<'EORB'
-    puts "CC: #{RbConfig::CONFIG['CC']}"
-    puts "CXX: #{RbConfig::CONFIG['CXX']}"
-    puts "CFLAGS: #{RbConfig::CONFIG['CFLAGS']}"
-EORB
+  printf "rbconfig CXX: "
+  ruby -r rbconfig -e "puts RbConfig::CONFIG['CXX']"
+  printf "rbconfig CFLAGS: "
+  ruby -r rbconfig -e "puts RbConfig::CONFIG['CFLAGS']"
   printf "Built ruby arch: "
   file $(which ruby)
   printf "Built libruby arch: "
