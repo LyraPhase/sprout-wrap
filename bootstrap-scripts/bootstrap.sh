@@ -293,6 +293,13 @@ function rvm_set_compile_opts() {
 }
 
 function brew_install_rvm_libs() {
+  if [ -n "$RVM_AUTOLIBS" ] && [ "$RVM_AUTOLIBS" -ge 0 ] && [ "$RVM_AUTOLIBS" -le 2 ]; then
+    # Install RVM ruby build dependencies when RVM is configured not to
+    # This allows us to avoid installing openssl@1.1 when unwanted
+    for _pkg in autoconf automake libtool pkg-config coreutils; do
+      grep -q "$_pkg" Brewfile || echo "brew '$_pkg'" >> Brewfile
+    done
+  fi
   # Refer to Ruby dependency list from ruby-install to keep this updated
   # https://github.com/postmodern/ruby-install/blob/master/share/ruby-install/ruby/dependencies.txt#L5
   if [[ "$RVM_ENABLE_YJIT" == "1" ]]; then
@@ -399,6 +406,9 @@ function rvm_install_ruby_and_gemset() {
   (
     turn_trace_off
     source_rvm
+    if [ -n "$RVM_AUTOLIBS" ] && [ "$RVM_AUTOLIBS" -ge 0 ] && [ "$RVM_AUTOLIBS" -le 4 ]; then
+      rvm autolibs "${RVM_AUTOLIBS:-4}"
+    fi
     # shellcheck disable=SC2086
     rvm install "ruby-${sprout_ruby_version}" ${CONFIGURE_ARGS}
     rvm use "ruby-${sprout_ruby_version}"
@@ -557,6 +567,7 @@ case $platform_version in
 
     # Set common configuration for all modern versions
     TRY_XCI_OSASCRIPT_FIRST=1
+    RVM_AUTOLIBS=2
     BREW_INSTALL_PKG_CONFIG=1
     BREW_INSTALL_LIBFFI=1
     RVM_COMPILE_OPTS_M1_LIBFFI=1
