@@ -208,6 +208,9 @@ function rvm_set_compile_opts() {
     export LDSHARED="clang -bundle -Wl,-undefined,dynamic_lookup"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-shared"
   fi
+  if [ "$machine" == "arm64" ]; then
+    export CFLAGS="${CFLAGS} -arch arm64e"
+  fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
       # Print all pkg-config variables in scriptable form with prefix: LIBFFI_
@@ -480,6 +483,12 @@ function debug_pkg_config_path() {
   fi
 }
 
+function debug_apple_arch() {
+  printf "machine: %s\n" "$(machine)"
+  sysctl machdep.cpu.features
+  sysctl machdep
+}
+
 function debug_ruby_bundler_cmds() {
   type rvm | head -1
   printf "ruby is: "
@@ -494,6 +503,8 @@ function rvm_debug_gems() {
     check_trace_state
     turn_trace_off
     echo "======= DEBUG ============"
+    echo "------- CPU Arch ---------"
+    debug_apple_arch
     echo "------- bootstrap.sh -----"
     debug_ruby_bundler_cmds
     (
