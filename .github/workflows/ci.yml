@@ -137,5 +137,6 @@ jobs:
             /var/log/install.log
             ~/.rvm/log/**/*.log
             ~/Library/Logs/Homebrew/**/*
+            ~/.rvm/rubies/ruby-*/lib/ruby/gems/*/extensions/**/mkmf.log
           overwrite: true
           compression-level: 9
