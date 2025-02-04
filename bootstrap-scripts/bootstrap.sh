@@ -216,7 +216,9 @@ function rvm_set_compile_opts() {
     export CFLAGS="-arch arm64e ${CFLAGS}"
     export LDFLAGS="-arch arm64e ${LDFLAGS}"
     CONFIGURE_ARGS="--clang --with-arch=arm64e ${CONFIGURE_ARGS}"
-    export RUBYOPT="-rrbconfig -e 'RbConfig::CONFIG[\"CC\"] = \"clang -arch arm64e\"'"
+    _rubyopt_cc_tmp_dir=$(mktemp -d /tmp/rubyopt_cc.XXXXXXXXXX)
+    echo "RbConfig::CONFIG['CC'] = 'clang -arch arm64e'" > "${_rubyopt_cc_tmp_dir}/set_cc.rb"
+    export RUBYOPT="-r${_rubyopt_cc_tmp_dir}/set_cc.rb"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
