@@ -454,7 +454,10 @@ function rvm_debug_autolibs() {
     turn_trace_off
     echo "======= DEBUG ============"
     echo "------- rvm autolibs -----"
-    echo "rvm autolibs = $(source_rvm; rvm autolibs show)" >&2
+    echo "rvm autolibs = $(
+      source_rvm 2>&1 1> /dev/null
+      rvm autolibs show
+    )" >&2
     echo "======= DEBUG ============"
   fi
 }
