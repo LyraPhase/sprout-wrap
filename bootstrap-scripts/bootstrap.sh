@@ -195,12 +195,12 @@ function rvm_set_compile_opts() {
   fi
   if [[ "$RVM_WITH_JEMALLOC" == "1" ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc"
-    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/jemalloc/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jemalloc-dir=$(pkg-config --variable=prefix jemalloc)"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/jemalloc/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+    opt_dir="$(pkg-config --variable=prefix jemalloc)${opt_dir:+:${opt_dir}}"
   fi
   if [[ "$RVM_COMPILE_OPTS_OPENSSL3" == "1" ]]; then
-    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/openssl@3/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
+    PKG_CONFIG_PATH="${_HOMEBREW_OPT}/openssl@3/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+    opt_dir="$(pkg-config --variable=prefix openssl)${opt_dir:+:${opt_dir}}"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
