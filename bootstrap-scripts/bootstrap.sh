@@ -216,6 +216,7 @@ function rvm_set_compile_opts() {
     export CFLAGS="-arch arm64e ${CFLAGS}"
     export LDFLAGS="-arch arm64e ${LDFLAGS}"
     CONFIGURE_ARGS="--clang --with-arch=arm64e ${CONFIGURE_ARGS}"
+    export RUBYOPT="-rrbconfig -e 'RbConfig::CONFIG[\"CC\"] = \"clang -arch arm64e\"'"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
@@ -495,6 +496,11 @@ function debug_apple_arch() {
   sysctl machdep
   printf "rbconfig CC: "
   ruby -r rbconfig -e "puts RbConfig::CONFIG['CC']"
+  ruby -r rbconfig -e <<'EORB'
+    puts "CC: #{RbConfig::CONFIG['CC']}"
+    puts "CXX: #{RbConfig::CONFIG['CXX']}"
+    puts "CFLAGS: #{RbConfig::CONFIG['CFLAGS']}"
+EORB
   printf "Built ruby arch: "
   file $(which ruby)
   printf "Built libruby arch: "
