@@ -203,6 +203,10 @@ function rvm_set_compile_opts() {
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
     opt_dir="$(pkg-config --variable=prefix openssl)${opt_dir:+:${opt_dir}}"
   fi
+  if [[ "$RVM_COMPILE_OPTS_LINKER_COMPATIBILITY_VERSION_INVALID_BUNDLE" == "1" ]]; then
+    ## Workaround: clang: error: invalid argument '-compatibility_version 3.1' only allowed with '-dynamiclib'
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-dldflags=-Wl,-undefined,dynamic_lookup"
+  fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
       # Print all pkg-config variables in scriptable form with prefix: LIBFFI_
@@ -531,7 +535,10 @@ case $platform_version in
     # First set version-specific XCODE_DMT
     case $platform_version in
       15.*) XCODE_DMG='Xcode_16.2.xip' ;;
-      14.*) XCODE_DMG='Xcode_15.1.xip' ;;
+      14.*)
+        XCODE_DMG='Xcode_15.1.xip'
+        RVM_COMPILE_OPTS_LINKER_COMPATIBILITY_VERSION_INVALID_BUNDLE=1
+        ;;
       13.*) XCODE_DMG='Xcode_15.1.xip' ;;
       12.*) XCODE_DMG='Xcode_14.3.1.xip' ;;
     esac
