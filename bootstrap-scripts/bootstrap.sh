@@ -493,6 +493,12 @@ function debug_apple_arch() {
   printf "machine: %s\n" "$(machine)"
   sysctl machdep.cpu.features
   sysctl machdep
+  printf "rbconfig CC: "
+  ruby -r rbconfig -e "puts RbConfig::CONFIG['CC']"
+  printf "Built ruby arch: "
+  file $(which ruby)
+  printf "Built libruby arch: "
+  find "${HOME}/.rvm/rubies/ruby-${sprout_ruby_version}/lib/" -type f -iname 'libruby.*dylib' -exec file '{}' \;
 }
 
 function debug_openssl() {
