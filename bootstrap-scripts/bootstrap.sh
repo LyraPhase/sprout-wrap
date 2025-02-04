@@ -203,6 +203,8 @@ function rvm_set_compile_opts() {
     PKG_CONFIG_PATH="${_HOMEBREW_OPT}/openssl@3/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl-dir=$(brew --prefix openssl@3)"
     opt_dir="$(pkg-config --variable=prefix openssl)${opt_dir:+:${opt_dir}}"
+    PATH="$(pkg-config --variable=exec_prefix openssl)/bin:${PATH}"
+    export PATH
   fi
   if [[ "$RVM_COMPILE_OPTS_LINKER_COMPATIBILITY_VERSION_INVALID_BUNDLE" == "1" ]]; then
     ## Workaround: clang: error: invalid argument '-compatibility_version 3.1' only allowed with '-dynamiclib'
