@@ -325,7 +325,7 @@ function brew_install_rvm_libs() {
   if [[ "$BREW_INSTALL_LIBKSBA" == "1" ]]; then
     grep -q 'libksba' Brewfile || echo "brew 'libksba'" >> Brewfile
   fi
-  if [[ "$CI" != 'true' ]]; then
+  # if [[ "$CI" != 'true' ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
       grep -q 'pkg-config' Brewfile || echo "brew 'pkg-config'" >> Brewfile
     fi
@@ -337,7 +337,7 @@ function brew_install_rvm_libs() {
       grep -q 'libxslt' Brewfile || echo "brew 'libxslt'" >> Brewfile
       grep -q 'libiconv' Brewfile || echo "brew 'libiconv'" >> Brewfile
       grep -q 'zlib' Brewfile || echo "brew 'zlib'" >> Brewfile
-    fi
+    # fi
   fi
 }
 
