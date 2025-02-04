@@ -210,7 +210,7 @@ function rvm_set_compile_opts() {
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-shared"
   fi
   if [ "$machine" == "arm64" ] && [ "${machine_apple:-}" == "arm64e" ]; then
-    CONFIGURE_ARGS="--with-arch=arm64e ${CONFIGURE_ARGS}"
+    CONFIGURE_ARGS="--with-arch=arm64 ${CONFIGURE_ARGS}"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
