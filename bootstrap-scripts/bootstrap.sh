@@ -568,7 +568,7 @@ case $platform_version in
 
     # Set common configuration for all modern versions
     TRY_XCI_OSASCRIPT_FIRST=1
-    RVM_AUTOLIBS=2
+    RVM_AUTOLIBS=1
     BREW_INSTALL_PKG_CONFIG=1
     BREW_INSTALL_LIBFFI=1
     RVM_COMPILE_OPTS_M1_LIBFFI=1
