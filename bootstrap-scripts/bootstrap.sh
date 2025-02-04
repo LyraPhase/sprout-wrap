@@ -783,8 +783,13 @@ fi
 
 brew_install_rvm_libs
 # Install Chef Workstation SDK via Brewfile
-[ -x "$(command -v brew)" ] && brew tap --force homebrew/cask
-[ -x "$(command -v brew)" ] && brew bundle install
+if [ -x "$(command -v brew)" ]; then
+  brew tap --force homebrew/cask
+  brew bundle install
+  if [[ "$BREW_INSTALL_OPENSSL3" == "1" ]]; then
+    brew uninstall --force openssl@1.1
+  fi
+fi
 
 if [[ $use_system_ruby == "1" ]]; then
   # We should never get here unless script has been edited by hand
