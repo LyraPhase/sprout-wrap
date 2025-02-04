@@ -210,6 +210,9 @@ function rvm_set_compile_opts() {
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-shared"
   fi
   if [ "$machine" == "arm64" ] && [ "${machine_apple:-}" == "arm64e" ]; then
+    export LDSHARED="${LDSHARED:-clang} -arch arm64"
+    export CFLAGS="-arch arm64 ${CFLAGS}"
+    export LDFLAGS="-arch arm64 ${LDFLAGS}"
     CONFIGURE_ARGS="--with-arch=arm64 ${CONFIGURE_ARGS}"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
