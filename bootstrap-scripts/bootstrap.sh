@@ -205,7 +205,8 @@ function rvm_set_compile_opts() {
   fi
   if [[ "$RVM_COMPILE_OPTS_LINKER_COMPATIBILITY_VERSION_INVALID_BUNDLE" == "1" ]]; then
     ## Workaround: clang: error: invalid argument '-compatibility_version 3.1' only allowed with '-dynamiclib'
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-dldflags=-Wl,-undefined,dynamic_lookup"
+    export LDSHARED="clang -bundle -Wl,-undefined,dynamic_lookup"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-shared"
   fi
   if [[ "$RVM_COMPILE_OPTS_M1_LIBFFI" == "1" ]]; then
     if [[ "$BREW_INSTALL_PKG_CONFIG" == "1" ]]; then
