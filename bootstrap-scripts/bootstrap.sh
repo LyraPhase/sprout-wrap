@@ -495,6 +495,11 @@ function debug_apple_arch() {
   sysctl machdep
 }
 
+function debug_openssl() {
+  printf "openssl: %s\n" "$(which openssl)"
+  openssl -version
+}
+
 function debug_ruby_bundler_cmds() {
   type rvm | head -1
   printf "ruby is: "
@@ -511,12 +516,16 @@ function rvm_debug_gems() {
     echo "======= DEBUG ============"
     echo "------- CPU Arch ---------"
     debug_apple_arch
+    echo "------- OpenSSL  ---------"
+    debug_openssl
     echo "------- bootstrap.sh -----"
     debug_ruby_bundler_cmds
     (
       turn_trace_off
       echo "------- RVM Subshell ---"
       source_rvm
+      echo "------- OpenSSL Sub-sh -"
+      debug_openssl
       debug_ruby_bundler_cmds
       rvm_use_locked_ruby_version@gemset
       rvm info
