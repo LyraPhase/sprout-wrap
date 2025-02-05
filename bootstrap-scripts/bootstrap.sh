@@ -502,6 +502,8 @@ function debug_apple_arch() {
   ruby -r rbconfig -e "puts RbConfig::CONFIG['CXX']"
   printf "rbconfig CFLAGS: "
   ruby -r rbconfig -e "puts RbConfig::CONFIG['CFLAGS']"
+  printf "Entire RbConfig::CONFIG: "
+  ruby -r rbconfig -r pp -e "pp RbConfig::CONFIG"
   printf "Built ruby arch: "
   file $(which ruby)
   printf "Built libruby arch: "
