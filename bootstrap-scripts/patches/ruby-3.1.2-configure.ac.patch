@@ -1,0 +1,11 @@
+--- a/configure.ac	2022-04-12 05:11:15.000000000 -0600
++++ b/configure.ac	2024-07-15 22:24:27.000000000 -0600
+@@ -1685,6 +1685,8 @@
+     rb_cv_function_name_string,
+     [AS_CASE(["$target_os"],[openbsd*],[
+       rb_cv_function_name_string=__func__
++     ],[*darwin*],[
++      rb_cv_function_name_string=__func__
+      ],[
+      rb_cv_function_name_string=no
+       RUBY_WERROR_FLAG([

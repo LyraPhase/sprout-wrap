@@ -1,0 +1,21 @@
+## shfmt configuration
+[*.sh]
+# -i=2
+indent_style = space
+indent_size = 2
+
+# --language-dialect
+shell_variant      = bash
+binary_next_line   = true
+# --case-indent
+switch_case_indent = true
+space_redirects    = true
+keep_padding       = false
+# --func-next-line
+function_next_line = false
+
+# Ignore directories when calling shfmt recursively
+[tmp/librarian/**]
+ignore = true
+[vendor/**]
+ignore = true

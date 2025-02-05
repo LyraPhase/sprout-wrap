@@ -2,3 +2,4 @@ tmp/
 cookbooks/
 .bundle/
 vendor/bundle
+*.sublime-workspace
