@@ -70,7 +70,8 @@ platforms:
   - name: macos-12-1
     driver:
       box: lyraphase-runner/macos-monterey-base
-      box_url: http://saturn.local:8888/lyraphase-runner-macos-monterey-base.box
+      # box_url: http://saturn.internal:8888/lyraphase-runner-macos-monterey-base.box
+      box_url: http://saturn.internal:8888/lyraphase-runner-macos-monterey-12-1-base.new-zstd-xz.box
       communicator: ssh
       gui: true
       customize:
