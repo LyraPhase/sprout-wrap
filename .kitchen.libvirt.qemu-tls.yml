@@ -22,7 +22,7 @@ driver:
   vagrantfiles:
     - 'test/fixtures/Vagrantfile.libvirt-qemu-tls'
   synced_folders:
-  - [".", "/tmp/kitchen/soloist", "disabled: false, type: 'rsync'"]
+  - [".", "/tmp/kitchen/soloist", "disabled: false, type: 'rsync', owner: 'vagrant', group: 'staff'"]
   # TODO: Find & fix bugs in Vagrant where it checks for vagrant-host path... needs to support remote NFS & 9p libvirt mounts
   # TODO: Fix mount: false setting for 9p
   # TODO: Fix auto-mount capability for Darwin / macOS... needs mount_9p support (see man mount_9p)
