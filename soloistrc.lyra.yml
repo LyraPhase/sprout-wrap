@@ -222,6 +222,7 @@ node_attributes:
 #      - imagemagick
       - openssl
       - xz
+      - gpgme
       - node
       - p7zip
       - pstree
