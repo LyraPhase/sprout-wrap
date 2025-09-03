@@ -197,6 +197,7 @@ node_attributes:
       - trinitronx/pcloud
       - homebrew/cask-drivers
       - chef/homebrew-chef
+      - colindean/fund
       - martido/homebrew-graph
       - auth0/auth0-cli
     formulas:
@@ -294,7 +295,7 @@ node_attributes:
       - audio-hijack
       - loopback
       - keyfinder
-      - blackhole
+      - blackhole-16ch
       - elektron-overbridge
       - elektron-transfer
       - paulxstretch
