@@ -477,7 +477,7 @@ case $platform_version in
     15.*)  XCODE_DMG='Xcode_16.2.xip'; ;;
     14.*)  XCODE_DMG='Xcode_15.1.xip'; ;;
     13.*)  XCODE_DMG='Xcode_15.1.xip'; ;;
-    12.*)  XCODE_DMG='Xcode_14.3.1.xip'; ;;
+    12.*)  XCODE_DMG='Xcode_14.2.xip'; ;;
   esac
 
   # Set common configuration for all modern versions
