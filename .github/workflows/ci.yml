@@ -43,7 +43,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-13, macos-14, macos-15]
+        os: [macos-13, macos-14]
     steps:
       - name: DEBUG What is GitHub Actions IP?
         run: |
@@ -67,18 +67,18 @@ jobs:
           sudo tee -a ~root/.profile <<EOPROFILE
           SSH_AUTH_SOCK=${{ env.SSH_AUTH_SOCK }}
           EOPROFILE
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-          cache-version: 1
-      - name: Set BREWFILE_PATH env var
-        run: |
-          echo "BREWFILE_PATH=${GITHUB_WORKSPACE}/test/fixtures/tmp/Brewfile.ci" >> $GITHUB_ENV
-      - name: DEBUG - GitHub Cache Paths BREWFILE_PATH
-        run: |
-          echo BREWFILE_PATH=$BREWFILE_PATH
-          echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
-        if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
+      # - uses: ruby/setup-ruby@v1
+      #   with:
+      #     bundler-cache: true
+      #     cache-version: 1
+      # - name: Set BREWFILE_PATH env var
+      #   run: |
+      #     echo "BREWFILE_PATH=${GITHUB_WORKSPACE}/test/fixtures/tmp/Brewfile.ci" >> $GITHUB_ENV
+      # - name: DEBUG - GitHub Cache Paths BREWFILE_PATH
+      #   run: |
+      #     echo BREWFILE_PATH=$BREWFILE_PATH
+      #     echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
+      #   if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
       - name: DEBUG - Print all shell env exports
         run: export -p
         if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
@@ -87,8 +87,8 @@ jobs:
           ls -lAR ${GITHUB_WORKSPACE}
           ls -lR /usr/local/Homebrew
         if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
-      - name: Generate Brewfile from soloistrc test fixture
-        run: make brewfile
+      # - name: Generate Brewfile from soloistrc test fixture
+      #   run: make brewfile
       - name: DEBUG - Where are Brewfiles?
         run: |
           find ${GITHUB_WORKSPACE} -iname 'Brewfile*'
@@ -128,3 +128,16 @@ jobs:
         run: |
           find ${GITHUB_WORKSPACE} \( -type d -a \( -name '*/nodes' -o -name '*/vendor' \) -prune \) -o -iname 'Brewfile*'
         if: ${{ env.debug_ci == 'true' || runner.debug == '1' }}
+      - name: Upload Logs on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build failure logs
+          path: |
+            /var/log/install.log
+            ~/.rvm/log/**/*.log
+            ~/Library/Logs/Homebrew/**/*
+            ~/.rvm/rubies/ruby-*/lib/ruby/gems/*/extensions/**/mkmf.log
+            ~/.rvm/rubies/ruby-*/lib/ruby/gems/*/extensions/**/gem_make.out
+          overwrite: true
+          compression-level: 9
