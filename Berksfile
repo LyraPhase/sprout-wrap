@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-site 'https://supermarket.getchef.com/api/v1'
+solver :gecode
+source 'https://supermarket.chef.io'
 
 cookbook 'sprout-rbenv',
   :github => 'pivotal-sprout/sprout-rbenv'
@@ -40,7 +41,7 @@ cookbook 'sprout-ssh',
 cookbook 'plist',
  :github => 'carsomyr/chef-plist',
  :ref => 'master',
- :path => 'vendor/cookbooks/plist'
+ :rel => 'vendor/cookbooks/plist'
 
 cookbook 'lyraphase_workstation', '~> 3.4',
  :github => 'LyraPhase/lyraphase_workstation'

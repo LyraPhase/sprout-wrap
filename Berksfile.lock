@@ -1,0 +1,98 @@
+DEPENDENCIES
+  build-essential (= 3.2.0)
+  homebrew (~> 5.3.0)
+  lyraphase_workstation
+    git: https://github.com/LyraPhase/lyraphase_workstation.git
+    revision: 21b54cbb315c00bc878d1ebc8e40ef3ed33241f8
+  mingw (= 0.1.1)
+  osx
+    git: https://github.com/pivotal-sprout/osx.git
+    revision: 57820f0c0f4b08e9cff82a57a7489f9dcc9345f7
+  plist
+    git: https://github.com/carsomyr/chef-plist.git
+    revision: b66cf5a243c26b33a8e822c69fd5beb20bf60836
+    ref: master
+    rel: vendor/cookbooks/plist
+  sprout-base
+    git: https://github.com/pivotal-sprout/sprout-base.git
+    revision: a7f515dd6ec08e682c9fb0637c8a153fa275e19f
+  sprout-git
+    git: https://github.com/pivotal-sprout/sprout-git.git
+    revision: 4b9cbcad5cfc88b7324f00a78439117e8c7a7e77
+  sprout-jetbrains-editors
+    git: https://github.com/pivotal-sprout/sprout-jetbrains-editors.git
+    revision: bcfcb62c1095a9ef33477f896ebda47918ad7618
+  sprout-mysql
+    git: https://github.com/pivotal-sprout/sprout-mysql.git
+    revision: 12a264fe5418ae9fc6f5300fe56abec058f4a743
+  sprout-osx-apps
+    git: https://github.com/pivotal-sprout/sprout-osx-apps.git
+    revision: abe74e25ac963746f6178cb8e371d51c8bbd9de0
+  sprout-osx-settings
+    git: https://github.com/pivotal-sprout/sprout-osx-settings.git
+    revision: 62630bea50cea7b24058854a5a216c3a4dbbe4ef
+  sprout-postgresql
+    git: https://github.com/pivotal-sprout/sprout-postgresql.git
+    revision: 97558d741bc7f0e1ea6c2f896dd2a3706b26c7ec
+  sprout-rbenv
+    git: https://github.com/pivotal-sprout/sprout-rbenv.git
+    revision: aacfd19f867511715e6070988013ed453d268efb
+  sprout-ruby
+    git: https://github.com/pivotal-sprout/sprout-ruby.git
+    revision: 2fc7d5273fccd978321450b61088bbd608867dfc
+  sprout-ssh
+    git: https://github.com/pivotal-sprout/sprout-ssh.git
+    revision: b3ac3a04d9b9494b32514e69b33720fd51f46224
+  sprout-terminal
+    git: https://github.com/pivotal-sprout/sprout-terminal.git
+    revision: 6d9be928aa0041f455d3721b14c89c5e068f5e04
+
+GRAPH
+  build-essential (3.2.0)
+    seven_zip (>= 0.0.0)
+  dmg (4.1.1)
+  homebrew (5.3.8)
+  lyraphase_workstation (3.4.1)
+    homebrew (>= 0.0.0)
+    osx (>= 0.0.0)
+    plist (~> 0.9)
+    sprout-base (>= 0.0.0)
+  mingw (0.1.1)
+    seven_zip (>= 0.0.0)
+  osx (0.1.0)
+  plist (0.9.4)
+  seven_zip (4.2.11)
+  sprout-base (0.7.0)
+    homebrew (>= 0.0.0)
+  sprout-git (0.4.0)
+    homebrew (>= 0.0.0)
+    sprout-base (>= 0.0.0)
+  sprout-jetbrains-editors (0.1.0)
+    homebrew (>= 0.0.0)
+    sprout-base (>= 0.0.0)
+  sprout-mysql (0.1.0)
+    homebrew (>= 0.0.0)
+    sprout-base (>= 0.0.0)
+  sprout-osx-apps (0.2.0)
+    dmg (>= 0.0.0)
+    homebrew (>= 1.6.6)
+    sprout-base (>= 0.0.0)
+    sprout-osx-settings (>= 0.0.0)
+  sprout-osx-settings (0.1.0)
+    homebrew (>= 0.0.0)
+    osx (>= 0.0.0)
+    sprout-base (>= 0.0.0)
+  sprout-postgresql (0.1.0)
+    homebrew (>= 1.5.4)
+    sprout-base (>= 0.0.0)
+  sprout-rbenv (0.1.0)
+    homebrew (>= 0.0.0)
+    sprout-base (>= 0.0.0)
+  sprout-ruby (0.1.0)
+    sprout-base (>= 0.0.0)
+  sprout-ssh (0.1.0)
+    sprout-base (>= 0.0.0)
+    sprout-osx-settings (>= 0.0.0)
+  sprout-terminal (0.1.0)
+    osx (>= 0.0.0)
+    sprout-base (>= 0.0.0)

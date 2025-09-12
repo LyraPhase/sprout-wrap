@@ -1,14 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'soloist', require: false
+gem 'soloist', require: false, github: 'LyraPhase/soloist', ref: 'develop'
 
 # >= 1.15.2 supports macOS 12.0 / Xcode 13.2
 #  ffi clang M1 compile
 gem 'ffi', '>= 1.15.2', require: false
 
 gem 'plist', require: false
-
-gem 'librarian-chef', require: false
 
 # lyraphase-chef requires nokogiri gem
 gem 'nokogiri', require: false
