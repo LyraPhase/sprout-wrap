@@ -4,5 +4,12 @@
 			"path": ".."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"shellformat.useEditorConfig": true
+	},
+	"extensions": {
+		"recommendations": [
+			"foxundermoon.shell-format"
+		]
+	}
 }

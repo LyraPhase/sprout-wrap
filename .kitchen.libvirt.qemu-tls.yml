@@ -22,7 +22,7 @@ driver:
   vagrantfiles:
     - 'test/fixtures/Vagrantfile.libvirt-qemu-tls'
   synced_folders:
-  - [".", "/tmp/kitchen/soloist", "disabled: false, type: 'rsync'"]
+  - [".", "/tmp/kitchen/soloist", "disabled: false, type: 'rsync', owner: 'vagrant', group: 'staff'"]
   # TODO: Find & fix bugs in Vagrant where it checks for vagrant-host path... needs to support remote NFS & 9p libvirt mounts
   # TODO: Fix mount: false setting for 9p
   # TODO: Fix auto-mount capability for Darwin / macOS... needs mount_9p support (see man mount_9p)
@@ -70,7 +70,8 @@ platforms:
   - name: macos-12-1
     driver:
       box: lyraphase-runner/macos-monterey-base
-      box_url: http://saturn.local:8888/lyraphase-runner-macos-monterey-base.box
+      # box_url: http://saturn.internal:8888/lyraphase-runner-macos-monterey-base.box
+      box_url: http://saturn.internal:8888/lyraphase-runner-macos-monterey-12-1-base.new-zstd-xz.box
       communicator: ssh
       gui: true
       customize:
