@@ -189,7 +189,6 @@ node_attributes:
       - bash-completion
       - ctags-exuberant
       - ag
-      - grc
       - ansible
       - pyenv
       - docker-machine

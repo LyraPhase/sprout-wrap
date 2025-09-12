@@ -133,7 +133,6 @@ node_attributes:
       - bash-completion
       - ctags-exuberant
       - ag
-      - grc
       - boot2docker
       - chromedriver
       - imagemagick

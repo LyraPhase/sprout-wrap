@@ -195,16 +195,21 @@ node_attributes:
     taps:
       - homebrew/homebrew-core
       - trinitronx/pcloud
-      - jlhonora/lsusb
       - homebrew/cask-drivers
       - chef/homebrew-chef
       - colindean/fund
+      - martido/homebrew-graph
+      - auth0/auth0-cli
     formulas:
       - bash-completion
 #      - ctags-exuberant
+      - chezmoi
       - ag
-      - exa
-      - grc
+      - bat
+      - git-delta
+      - rg
+      - eza
+      - fzf
       - gptfdisk
 #      - boot2docker
 #      - chromedriver
@@ -214,9 +219,11 @@ node_attributes:
       - docker-machine-nfs
       - libvirt
       - qemu
+      - colima
 #      - imagemagick
       - openssl
       - xz
+      - gpgme
       - node
       - p7zip
       - pstree
@@ -226,6 +233,12 @@ node_attributes:
       - ssh-copy-id
       - pre-commit
       - shellcheck
+      - yamllint
+      - ansible-builder
+      - ansible-creator
+      - ansible-lint
+      - sshpass
+      - ansible
       - tmux
 # For pbcopy to work in tmux: http://evertpot.com/osx-tmux-vim-copy-paste-clipboard/
 # Also fixes Sublime Text "subl" command not working
@@ -261,13 +274,16 @@ node_attributes:
       - expect
       - rename
       - lastpass-cli
+      - ykman
       - pwgen
       - terminal-notifier
-      - yubikey-personalization
+      - auth0
 # Intel Edison / IoT tools
       - dfu-util
       - coreutils
-      - lsusb
+      - lsusb-laniksj
+      - picocom
+      - minicom
     casks:
       - asana
       - backuploupe
@@ -327,9 +343,6 @@ node_attributes:
       - osxfuse
       - lastpass
       - yubico-authenticator
-      - yubico-yubikey-manager
-      - yubico-yubikey-piv-manager
-      - yubico-yubikey-personalization-gui
       - java
 #      - cyberduck
       - pcloud-drive

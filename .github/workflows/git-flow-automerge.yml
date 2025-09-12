@@ -9,6 +9,9 @@ on:
     branches: [ develop ]
     types: [ labeled, closed, edited ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
+
 jobs:
   master-branch:
     runs-on: ubuntu-latest
@@ -17,11 +20,11 @@ jobs:
         with:
           ref: master
       - name: Extract master SHA
-        run: echo "::set-output name=sha::$(git rev-parse master)"
+        run: echo "sha=$(git rev-parse master)" >> "$GITHUB_OUTPUT"
         id: master_branch
       - name: Check triggering user permissions
         id: check_user_permissions
-        uses: actions-cool/check-user-permission@v2.2.0
+        uses: actions-cool/check-user-permission@v2.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ github.triggering_actor }}
@@ -43,20 +46,20 @@ jobs:
         run: |
           bundle exec gem list --quiet --local --exact 'chef' | \
           ruby -ne 'version = gsub(/chef\s*\((?<version>.*)\)$/, %q/\k<version>/); \
-                    print "::set-output name=chef_version::#{version.chomp}"'
+                    print "chef_version=#{version.chomp}"' >> "$GITHUB_OUTPUT"
         id: extract_chef_version
       - name: Set release/chef-version branch name
         run: |
-          echo '::set-output name=branch::release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}'
+          echo 'branch=release/chef-v${{ steps.extract_chef_version.outputs.chef_version }}' >> "$GITHUB_OUTPUT"
         id: chef_release
-      - uses: peterjgrainger/action-create-branch@v2.2.0
+      - uses: peterjgrainger/action-create-branch@v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
         with:
           branch: ${{ steps.chef_release.outputs.branch }}
           sha: ${{ needs.master-branch.outputs.sha }}
       - name: git-flow-merge-action
-        uses: yanamura/git-flow-merge-action@v1
+        uses: trinitronx/git-flow-merge-action@fix-559-update-nodejs-to-v20
         with:
           github_token: ${{ secrets.LYRAPHASE_RUNNER_AUTOMERGE_TOKEN }}
           branch: 'develop'

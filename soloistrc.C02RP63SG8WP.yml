@@ -173,7 +173,6 @@ node_attributes:
       - bash-completion
       - ctags-exuberant
       - ag
-      - grc
       - docker
       - docker-compose
       - docker-machine
