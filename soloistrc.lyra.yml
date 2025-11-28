@@ -209,6 +209,7 @@ node_attributes:
       - rg
       - broot
       - eza
+      - fd
       - fzf
       - ranger
       - duf
