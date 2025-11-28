@@ -209,6 +209,7 @@ node_attributes:
       - rg
       - eza
       - fzf
+      - ranger
       - gptfdisk
 #      - boot2docker
 #      - chromedriver
