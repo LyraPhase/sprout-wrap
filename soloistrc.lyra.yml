@@ -207,6 +207,7 @@ node_attributes:
       - bat
       - git-delta
       - rg
+      - broot
       - eza
       - fzf
       - ranger
